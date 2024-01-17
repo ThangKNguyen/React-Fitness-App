@@ -14,7 +14,7 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
         const fetchExercisesData = async () => {
           const bodyPartsData = await fetchData('https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions);
     
-          setBodyParts(['all', ...bodyPartsData]); //why all?
+          setBodyParts(['all', ...bodyPartsData]); //why all? because the first one is named 'all'
         };
     
         fetchExercisesData(); //call when the app loads
@@ -24,17 +24,23 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
     const handleSearch = async () =>{
         if(search){ //if search exists
             const exercisesData = await fetchData(
-                'https://exercisedb.p.rapidapi.com/exercises',
+                'https://exercisedb.p.rapidapi.com/exercises?limit=50',
                 exerciseOptions
             ); //called from fetchData ultils
 
+            
+
+            
+
             const searchedExercises = exercisesData.filter(//filter by catergory
             (item) => item.name.toLowerCase().includes(search) // search by category, check if it includes the search term we looking for
-            || exercise.target.toLowerCase.includes(search)
+            || item.target.toLowerCase().includes(search)
                    || item.target.toLowerCase().includes(search)
                    || item.equipment.toLowerCase().includes(search)
                    || item.bodyPart.toLowerCase().includes(search),
             );
+
+            
             
             setSearch("") //clear the search after finishing
             setExercises(searchedExercises)
@@ -124,4 +130,4 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
     
 }
 
-//stopped at 1:15:00
+//stopped at 1:33:41

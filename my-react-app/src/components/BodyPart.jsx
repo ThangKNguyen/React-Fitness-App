@@ -10,7 +10,7 @@ export default function BodyPart({item, setBodyPart, bodyPart}){
             className='bodyPart-card'
             sx={
                 {
-                    borderTop: bodyPart === item ? '4px solid #FF2625': '',
+                    borderTop: bodyPart === item ? '4px solid #FF2625': '', //item is the item that we're clicking on or the first item
                     background: '#fff', 
                     borderBottomLeftRadius: '20px', 
                     width: '270px', 
@@ -19,6 +19,13 @@ export default function BodyPart({item, setBodyPart, bodyPart}){
                     gap: '47px'
 
                 }
+            }
+
+            onClick={()=>{
+                setBodyPart(item) // the body part is now the selected item with selected styling
+                window.scrollTo({top: 1800, left: 100, behavior:'smooth'})
+            }
+
             }
         >
             <img src ={Icon}

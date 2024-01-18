@@ -24,7 +24,7 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
     const handleSearch = async () =>{
         if(search){ //if search exists
             const exercisesData = await fetchData(
-                'https://exercisedb.p.rapidapi.com/exercises?limit=50',
+                'https://exercisedb.p.rapidapi.com/exercises?limit=900',
                 exerciseOptions
             ); //called from fetchData ultils
 
@@ -44,6 +44,8 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
             
             setSearch("") //clear the search after finishing
             setExercises(searchedExercises)
+          
+            
         }
        
     }

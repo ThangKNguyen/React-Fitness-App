@@ -14,9 +14,9 @@ export default function Exercises({exercises, setExercises, bodyPart}){
           let exercisesData = [];
     
           if (bodyPart === 'all') { //if we click on all, fetch data and display all exercises
-            exercisesData = await fetchData('https://exercisedb.p.rapidapi.com/exercises', exerciseOptions); 
+            exercisesData = await fetchData('https://exercisedb.p.rapidapi.com/exercises?limit=100', exerciseOptions); 
           } else { //if we click on each exercise, we display info about that individual exercise in the gifs, fetch data and display all exercises
-            exercisesData = await fetchData(`https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`, exerciseOptions);
+            exercisesData = await fetchData(`https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=100`, exerciseOptions);
           }
     
           setExercises(exercisesData);

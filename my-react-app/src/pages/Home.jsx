@@ -10,6 +10,8 @@ export default function Home(){
                                                     //their changes will reflect across the application
     const [exercises, setExercises] = useState([])
 
+    
+    
     return(
         <Box>
             <HeroBanner/>

@@ -1,7 +1,8 @@
 // to display each box of body part on horizontal scroll bar
 import {Stack, Typography} from '@mui/material'
 import Icon from '../assets/icons/gym.png'
-export default function BodyPart({item, setBodyPart, bodyPart}){
+
+export default function BodyPart({item, bodyPart, setBodyPart}){
     return(
         <Stack
             type="button"

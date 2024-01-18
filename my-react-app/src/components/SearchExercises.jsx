@@ -10,7 +10,7 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
     
     const [bodyParts, setBodyParts] = useState([]);
 
-    useEffect(() => {
+    useEffect(() => { // data from this function will be passed into the card right below search bar
         const fetchExercisesData = async () => {
           const bodyPartsData = await fetchData('https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions);
     

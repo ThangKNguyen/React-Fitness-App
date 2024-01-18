@@ -28,9 +28,11 @@ const LeftArrow = () => {
 
 
 export default function HorizontalScrollbar({data, bodyPart, setBodyPart}){ //taking the body parts data from api
+  
     return(
         <ScrollMenu LeftArrow={LeftArrow} RightArrow={RightArrow} >
             {data.map((item) => //map it over to a box
+
             (<Box
                 key ={item.id || item} //what is item.id?
                 itemId ={item.id || item}
@@ -38,13 +40,14 @@ export default function HorizontalScrollbar({data, bodyPart, setBodyPart}){ //ta
                 m="0 40px"
             >
                 <BodyPart
-                    item={item} 
+                    item={item} //each item is mapped into a box and bodyPart component
                     bodyPart={bodyPart}
                     setBodyPart={setBodyPart}
                 />
 
                 
             </Box>)
+
             )}
                 
         </ScrollMenu>

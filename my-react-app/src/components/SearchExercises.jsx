@@ -8,7 +8,8 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
 
     const [search, setSearch] = useState("")
     
-    const [bodyParts, setBodyParts] = useState([]);
+    const [bodyParts, setBodyParts] = useState([]); //body parts contain array of body parts, Strings, ex: all, back, cardio...
+   
 
     useEffect(() => { // data from this function will be passed into the card right below search bar
         const fetchExercisesData = async () => {
@@ -124,6 +125,7 @@ export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
                         data={bodyParts}
                         bodyPart={bodyPart}
                         setBodyPart={setBodyPart}
+                        isBodyParts //to let horizontal scroll bar know where the data is from, if from search exercises, then display bodyparts
                     /> {/*props*/}
                 
             </Box>

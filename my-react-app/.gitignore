@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+utils/fetchData.js
 
 # Editor directories and files
 .vscode/*

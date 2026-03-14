@@ -1,137 +1,182 @@
 import { useState, useEffect } from 'react';
-import {Box, Button, Stack, TextField, Typography} from '@mui/material'
+import { Box, Button, Stack, TextField, Typography, InputAdornment } from '@mui/material';
+import { Search } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+import { motion } from 'framer-motion';
 import HorizontalScrollbar from './HorizontalScrollbar';
 import { exerciseOptions, fetchData } from '../utils/fetchData';
 
-export default function SearchExercises({setExercises, bodyPart, setBodyPart}){
+export default function SearchExercises({ setExercises, bodyPart, setBodyPart }) {
+  const [search, setSearch] = useState('');
+  const [bodyParts, setBodyParts] = useState([]);
+  const theme = useTheme();
 
+  useEffect(() => {
+    const fetchExercisesData = async () => {
+      const bodyPartsData = await fetchData(
+        'https://exercisedb.p.rapidapi.com/exercises/bodyPartList',
+        exerciseOptions
+      );
+      setBodyParts(['all', ...bodyPartsData]);
+    };
+    fetchExercisesData();
+  }, []);
 
-    const [search, setSearch] = useState("")
-    
-    const [bodyParts, setBodyParts] = useState([]); //body parts contain array of body parts, Strings, ex: all, back, cardio...
-   
+  const handleSearch = async () => {
+    if (search) {
+      const exercisesData = await fetchData(
+        'https://exercisedb.p.rapidapi.com/exercises?limit=900',
+        exerciseOptions
+      );
 
-    useEffect(() => { // data from this function will be passed into the card right below search bar
-        const fetchExercisesData = async () => {
-          const bodyPartsData = await fetchData('https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions);
-    
-          setBodyParts(['all', ...bodyPartsData]); //why all? because the first one is named 'all'
-        };
-    
-        fetchExercisesData(); //call when the app loads
-      }, []); //only displayed once at the start
-    
+      const searchedExercises = exercisesData.filter(
+        (item) =>
+          item.name.toLowerCase().includes(search) ||
+          item.target.toLowerCase().includes(search) ||
+          item.equipment.toLowerCase().includes(search) ||
+          item.bodyPart.toLowerCase().includes(search)
+      );
 
-    const handleSearch = async () =>{
-        if(search){ //if search exists
-            const exercisesData = await fetchData(
-                'https://exercisedb.p.rapidapi.com/exercises?limit=900',
-                exerciseOptions
-            ); //called from fetchData ultils
-
-            
-
-            
-
-            const searchedExercises = exercisesData.filter(//filter by catergory
-            (item) => item.name.toLowerCase().includes(search) // search by category, check if it includes the search term we looking for
-            || item.target.toLowerCase().includes(search)
-                   || item.target.toLowerCase().includes(search)
-                   || item.equipment.toLowerCase().includes(search)
-                   || item.bodyPart.toLowerCase().includes(search),
-            );
-
-            
-            
-            setSearch("") //clear the search after finishing
-            setExercises(searchedExercises)
-          
-            
-        }
-       
+      setSearch('');
+      setExercises(searchedExercises);
     }
+  };
 
+  return (
+    <Stack alignItems="center" mt="60px" justifyContent="center" p="20px">
+      {/* Section heading */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+        style={{ textAlign: 'center', marginBottom: '52px' }}
+      >
+        <Typography
+          sx={{
+            fontFamily: '"Bebas Neue", sans-serif',
+            fontSize: { lg: '56px', xs: '38px' },
+            letterSpacing: '0.04em',
+            color: 'text.primary',
+            lineHeight: 1.05,
+            textAlign: 'center',
+          }}
+        >
+          Awesome Exercises
+          <br />
+          <Box
+            component="span"
+            sx={{
+              background: 'linear-gradient(135deg, #FF2625 0%, #FF6B35 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            You Should Know
+          </Box>
+        </Typography>
+      </motion.div>
 
-    return(
-       <Stack
-            alignItems='center'
-            mt='37px'
-            justifyContent='center'
-            p='20px'
-       >
-            <Typography
-                fontWeight={700}
-                sx={
-                    {
-                        fontSize: {lg:'44px',xs:'30px'}
-                    }
-                }
-                mb='50px'
-                textAlign='center'
-            >Awesome Exercises <br/> You Should Know
-            </Typography>
-            <Box position='relative' mb='72px'>
-                <TextField
-                    height='76px'
-                    value={search}
-                    onChange={(e)=> setSearch(e.target.value.toLowerCase())}
-                    placeholder='Search Exercises'
-                    type="text"
-                    sx={
-                        {
-                            input:{
-                                fontWeight:'700',
-                                border:'none',
-                                borderRadius:'4px'
+      {/* Search bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1], delay: 0.1 }}
+        style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '64px' }}
+      >
+        <Box position="relative" sx={{ width: { lg: '800px', xs: '100%' } }}>
+          <TextField
+            value={search}
+            onChange={(e) => setSearch(e.target.value.toLowerCase())}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Search exercises, muscles, equipment..."
+            type="text"
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: 'text.secondary', fontSize: '20px' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '50px',
+                backgroundColor: 'background.paper',
+                fontFamily: '"DM Sans", sans-serif',
+                fontWeight: 500,
+                fontSize: '15px',
+                pr: '6px',
+                '& fieldset': {
+                  borderColor: theme.palette.divider,
+                  borderWidth: '1.5px',
+                },
+                '&:hover fieldset': {
+                  borderColor: theme.palette.primary.main,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme.palette.primary.main,
+                  borderWidth: '2px',
+                },
+              },
+              '& .MuiOutlinedInput-input': {
+                py: '15px',
+                color: 'text.primary',
+                '&::placeholder': {
+                  color: 'text.secondary',
+                  opacity: 0.8,
+                },
+              },
+            }}
+          />
+          <Button
+            className="search-btn"
+            onClick={handleSearch}
+            variant="contained"
+            sx={{
+              position: 'absolute',
+              right: '6px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'linear-gradient(135deg, #FF2625 0%, #FF6B35 100%)',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontFamily: '"DM Sans", sans-serif',
+              fontSize: { lg: '15px', xs: '13px' },
+              px: { lg: '28px', xs: '18px' },
+              py: '10px',
+              borderRadius: '50px',
+              boxShadow: '0 4px 16px rgba(255, 38, 37, 0.35)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #CC1E1D 0%, #e55d2a 100%)',
+                boxShadow: '0 6px 24px rgba(255, 38, 37, 0.5)',
+              },
+              transition: 'all 0.25s ease',
+            }}
+          >
+            Search
+          </Button>
+        </Box>
+      </motion.div>
 
-                            },
-                            width:{
-                                lg:'800px',
-                                xs: '350px'
-                            },
-                            backgroundColor: '#fff',
-                            borderRadius:'40px'
-                        }
-                    }
-
-                />
-                <Button className="search-btn"
-                    sx={
-                        {
-                            bgcolor:'#FF2625',
-                            color: '#FFF',
-                            textTransform: 'none',
-                            width: { lg:'175px', xs:'80px'},
-                            fontSize: { lg:'20px', xs:'14px'},
-                            height:'56px',
-                            position: 'absolute',
-                            right:'0',
-                            ml: '5px' //needs fix
-                        }
-                    }
-                    onClick={handleSearch}
-                >
-                    Search
-                </Button>
-            </Box>
-            <Box sx={
-                        {
-                            position:'relative',
-                            width:"100%",
-                            p: "20px"
-                        }
-                }>
-                    <HorizontalScrollbar 
-                        data={bodyParts}
-                        bodyPart={bodyPart}
-                        setBodyPart={setBodyPart}
-                        isBodyParts //to let horizontal scroll bar know where the data is from, if from search exercises, then display bodyparts
-                    /> {/*props*/}
-                
-            </Box>
-       </Stack>
-    )
-    
+      {/* Body parts scrollbar */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        style={{ position: 'relative', width: '100%', padding: '20px' }}
+      >
+        <HorizontalScrollbar
+          data={bodyParts}
+          bodyPart={bodyPart}
+          setBodyPart={setBodyPart}
+          isBodyParts
+        />
+      </motion.div>
+    </Stack>
+  );
 }
-
-//stopped at 1:33:41

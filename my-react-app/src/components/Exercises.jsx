@@ -1,113 +1,120 @@
-//exercises component below the scroll bar, with the gifs, this is wrapper of gifs
-import { Pagination } from '@mui/material/'
-import {Box, Stack, Typography} from "@mui/material"
-import { useEffect, useState } from "react"
-import { exerciseOptions, fetchData } from "../utils/fetchData"
-import ExerciseCard from './ExerciseCard'
-import Loader from './Loader'
+import { Pagination } from '@mui/material/';
+import { Box, Stack, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { exerciseOptions, fetchData } from '../utils/fetchData';
+import ExerciseCard from './ExerciseCard';
+import Loader from './Loader';
 
-export default function Exercises({exercises, setExercises, bodyPart}){
+export default function Exercises({ exercises, setExercises, bodyPart }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [exercisesPerPage] = useState(6);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showNoExercisesMessage, setShowNoExercisesMessage] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [exercisesPerPage] = useState(6);
+  const paginate = (event, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 1800, behavior: 'smooth' });
+  };
 
-    const [isLoading, setIsLoading] = useState(true);
-    const [showNoExercisesMessage, setShowNoExercisesMessage] = useState(false);
+  const indexOfLastExercise = currentPage * exercisesPerPage;
+  const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
+  const currentExercises = exercises.slice(indexOfFirstExercise, indexOfLastExercise);
 
-    const paginate = (event, value) => {
-        setCurrentPage(value);
+  useEffect(() => {
+    const fetchExercisesData = async () => {
+      let exercisesData = [];
 
-        window.scrollTo({ top: 1800, behavior: 'smooth' });
-        
+      if (bodyPart === 'all') {
+        exercisesData = await fetchData(
+          'https://exercisedb.p.rapidapi.com/exercises?limit=100',
+          exerciseOptions
+        );
+      } else {
+        exercisesData = await fetchData(
+          `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=100`,
+          exerciseOptions
+        );
+      }
+
+      setExercises(exercisesData);
     };
 
-       // Pagination
-       const indexOfLastExercise = currentPage * exercisesPerPage;
-       const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
-       const currentExercises = exercises.slice(indexOfFirstExercise, indexOfLastExercise); //slice array of objects
-       
-       
+    fetchExercisesData();
+  }, [bodyPart]);
 
-    useEffect(() => {
-        const fetchExercisesData = async () => {
-          let exercisesData = [];
-    
-          if (bodyPart === 'all') { //if we click on all, fetch data and display all exercises
-            exercisesData = await fetchData('https://exercisedb.p.rapidapi.com/exercises?limit=100', exerciseOptions); 
-          } else { //if we click on each exercise, we display info about that individual exercise in the gifs, fetch data and display all exercises
-            exercisesData = await fetchData(`https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=100`, exerciseOptions);
-          }
-    
-          setExercises(exercisesData);
-        };
-    
-        fetchExercisesData();
-      }, [bodyPart]); //called every time the bodypart changes
+  if (!currentExercises.length) return <Loader />;
 
-      
-    
-      if (!currentExercises.length) return <Loader/>;
-    return(
-       <Box id ="exercises"
-            sx={
-                {
-                    mt:{lg:'110px'}
-                }
-            }
-            mt='50px'
-            p='20px'
+  return (
+    <Box id="exercises" sx={{ mt: { lg: '110px' } }} mt="50px" p="20px">
+      {/* Section heading */}
+      <motion.div
+        initial={{ opacity: 0, x: -24 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <Stack direction="row" alignItems="center" gap="12px" mb="40px">
+          <Box
+            sx={{
+              width: '4px',
+              height: '32px',
+              background: 'linear-gradient(180deg, #FF2625, #FF6B35)',
+              borderRadius: '4px',
+            }}
+          />
+          <Typography
+            sx={{
+              fontFamily: '"Bebas Neue", sans-serif',
+              fontSize: { lg: '36px', xs: '26px' },
+              letterSpacing: '0.03em',
+              color: 'text.primary',
+            }}
+          >
+            Showing Results
+          </Typography>
+        </Stack>
+      </motion.div>
 
-       
-       >
+      {/* Cards grid */}
+      <Stack
+        direction="row"
+        sx={{ gap: { lg: '32px', xs: '24px' } }}
+        flexWrap="wrap"
+        justifyContent="center"
+      >
+        {currentExercises.map((exercise, index) => (
+          <ExerciseCard key={index} exercise={exercise} index={index} />
+        ))}
+      </Stack>
 
-            <Typography 
-                variant='h4'
-                mb="46px"
-            >
-                Showing results
-            </Typography>
-            <Stack
-                direction='row'
-                sx={
-                    {
-                        gap: {lg: '110px', xs:'50px'}
-                    }
-                }
-                flexWrap='wrap'
-                justifyContent='center'
-            >
-                
-                {currentExercises.map((exercise,index) =>(
-                        <ExerciseCard key={index} exercise={exercise}/>
-                        
-                    )
-                )}
-
-            </Stack>
-
-            <Stack
-                sx={
-                        { 
-                            mt: { lg: '114px', xs: '70px' } 
-                        }
-                   }
-                   alignItems="center"
-            >       
-                {exercises.length > 9 && (
-                    <Pagination
-                        color="standard"
-                        shape="rounded"
-                        defaultPage={1}
-                        count={Math.ceil(exercises.length / exercisesPerPage)}
-                        page={currentPage}
-                        onChange={paginate}
-                        size="large"
-                        
-                    />
-                )}
-                    
-            </Stack>
-       </Box>
-    )
-    
+      {/* Pagination */}
+      <Stack sx={{ mt: { lg: '80px', xs: '48px' } }} alignItems="center">
+        {exercises.length > 9 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+          >
+            <Pagination
+              color="primary"
+              shape="rounded"
+              defaultPage={1}
+              count={Math.ceil(exercises.length / exercisesPerPage)}
+              page={currentPage}
+              onChange={paginate}
+              size="large"
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontWeight: 600,
+                },
+              }}
+            />
+          </motion.div>
+        )}
+      </Stack>
+    </Box>
+  );
 }

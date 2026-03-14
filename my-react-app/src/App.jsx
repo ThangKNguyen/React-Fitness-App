@@ -5,10 +5,13 @@ import './App.css';
 import Navbar from './components/Navbar';
 import ExerciseDetail from './pages/ExerciseDetail';
 import Home from './pages/Home';
+import SavedPage from './pages/SavedPage';
 import Footer from './components/Footer';
+import WorkoutDrawer from './components/WorkoutDrawer';
 
 function App() {
   const [mode, setMode] = useState('dark');
+  const [workoutOpen, setWorkoutOpen] = useState(false);
 
   const toggleMode = () => {
     setMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -120,13 +123,15 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ maxWidth: '1488px', width: '100%', mx: 'auto' }}>
-        <Navbar mode={mode} toggleMode={toggleMode} />
+        <Navbar mode={mode} toggleMode={toggleMode} onOpenWorkout={() => setWorkoutOpen(true)} />
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path="/exercise/:id" element={<ExerciseDetail />} />
+          <Route path="/saved" element={<SavedPage />} />
         </Routes>
         <Footer />
       </Box>
+      <WorkoutDrawer open={workoutOpen} onClose={() => setWorkoutOpen(false)} />
     </ThemeProvider>
   );
 }

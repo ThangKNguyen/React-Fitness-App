@@ -28,5 +28,4 @@ dist-ssr
 
 .env
 .env.*
-!.env.example
-src/utils/fetchData.js
+

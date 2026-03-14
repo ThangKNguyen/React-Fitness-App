@@ -1,9 +1,12 @@
-import { Typography, Stack, Box } from '@mui/material';
+import { Typography, Stack, Box, Button } from '@mui/material';
+import { Favorite, FavoriteBorder, FitnessCenter, CheckCircle } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import BodyPartImage from '../assets/icons/body-part.png';
 import TargetImage from '../assets/icons/target.png';
 import EquipmentImage from '../assets/icons/equipment.png';
+import { useFavorites } from '../utils/useFavorites';
+import { useWorkout } from '../utils/useWorkout';
 
 const muscleDescriptions = {
   abs: (name) =>
@@ -51,13 +54,17 @@ const getDescription = (name, target) => {
   const key = target.toLowerCase();
   const fn = muscleDescriptions[key];
   if (fn) return fn(name.charAt(0).toUpperCase() + name.slice(1));
-  // Fallback for any target not explicitly listed
   return `${name.charAt(0).toUpperCase() + name.slice(1)} is an effective exercise for developing your ${target}. Training this muscle group consistently will improve strength, build muscle, and enhance your overall athletic performance.`;
 };
 
 export default function Detail({ exerciseDetail }) {
   const { bodyPart, gifUrl, name, target, equipment } = exerciseDetail;
   const theme = useTheme();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isInWorkout, addToWorkout, removeFromWorkout } = useWorkout();
+
+  const favorited = exerciseDetail.id ? isFavorite(exerciseDetail.id) : false;
+  const inWorkout = exerciseDetail.id ? isInWorkout(exerciseDetail.id) : false;
 
   const bodyPartDetail = [
     { icon: BodyPartImage, name: bodyPart, label: 'Body Part' },
@@ -96,10 +103,94 @@ export default function Detail({ exerciseDetail }) {
               color: 'text.primary',
               lineHeight: 1,
               textTransform: 'capitalize',
+              mb: '16px',
             }}
           >
             {name}
           </Typography>
+
+          {/* Action buttons */}
+          {exerciseDetail.id && (
+            <Stack direction="row" gap="12px" flexWrap="wrap">
+              <Button
+                variant={favorited ? 'contained' : 'outlined'}
+                startIcon={favorited ? <Favorite sx={{ fontSize: '16px' }} /> : <FavoriteBorder sx={{ fontSize: '16px' }} />}
+                onClick={() => toggleFavorite(exerciseDetail)}
+                sx={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  borderRadius: '10px',
+                  px: '20px',
+                  py: '9px',
+                  textTransform: 'none',
+                  ...(favorited
+                    ? {
+                        background: 'linear-gradient(135deg, #FF2625 0%, #FF6B35 100%)',
+                        boxShadow: '0 4px 16px rgba(255,38,37,0.3)',
+                        color: '#fff',
+                        border: 'none',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #CC1E1D 0%, #e55d2a 100%)',
+                        },
+                      }
+                    : {
+                        borderColor: 'rgba(255,38,37,0.4)',
+                        color: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          backgroundColor: 'rgba(255,38,37,0.06)',
+                        },
+                      }),
+                }}
+              >
+                {favorited ? 'Saved' : 'Save'}
+              </Button>
+
+              <Button
+                variant={inWorkout ? 'contained' : 'outlined'}
+                startIcon={
+                  inWorkout
+                    ? <CheckCircle sx={{ fontSize: '16px' }} />
+                    : <FitnessCenter sx={{ fontSize: '16px' }} />
+                }
+                onClick={() => {
+                  if (inWorkout) removeFromWorkout(exerciseDetail.id);
+                  else addToWorkout(exerciseDetail);
+                }}
+                sx={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  borderRadius: '10px',
+                  px: '20px',
+                  py: '9px',
+                  textTransform: 'none',
+                  ...(inWorkout
+                    ? {
+                        background: 'linear-gradient(135deg, #FF6B35 0%, #FF2625 100%)',
+                        boxShadow: '0 4px 16px rgba(255,107,53,0.3)',
+                        color: '#fff',
+                        border: 'none',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #e55d2a 0%, #CC1E1D 100%)',
+                        },
+                      }
+                    : {
+                        borderColor: theme.palette.divider,
+                        color: 'text.secondary',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          color: 'primary.main',
+                          backgroundColor: 'rgba(255,38,37,0.06)',
+                        },
+                      }),
+                }}
+              >
+                {inWorkout ? 'In Workout' : 'Add to Workout'}
+              </Button>
+            </Stack>
+          )}
         </motion.div>
 
         {/* Description */}
@@ -158,7 +249,6 @@ export default function Detail({ exerciseDetail }) {
                     }}
                   />
                 </Box>
-
                 <Stack>
                   <Typography
                     sx={{

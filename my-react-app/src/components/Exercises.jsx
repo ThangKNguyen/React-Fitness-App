@@ -37,7 +37,9 @@ export default function Exercises({ exercises, setExercises, bodyPart }) {
         );
       }
 
-      setExercises(exercisesData);
+      if (Array.isArray(exercisesData)) {
+        setExercises(exercisesData);
+      }
     };
 
     fetchExercisesData();

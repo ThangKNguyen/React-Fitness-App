@@ -17,7 +17,9 @@ export default function SearchExercises({ setExercises, bodyPart, setBodyPart })
         'https://exercisedb.p.rapidapi.com/exercises/bodyPartList',
         exerciseOptions
       );
-      setBodyParts(['all', ...bodyPartsData]);
+      if (Array.isArray(bodyPartsData)) {
+        setBodyParts(['all', ...bodyPartsData]);
+      }
     };
     fetchExercisesData();
   }, []);

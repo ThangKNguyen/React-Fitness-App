@@ -5,7 +5,7 @@ import Icon from '../assets/icons/gym.png';
 
 export default function BodyPart({ item, bodyPart, setBodyPart }) {
   const theme = useTheme();
-  const isSelected = bodyPart === item;
+  const isSelected = bodyPart === item.id;
 
   return (
     <motion.div
@@ -19,7 +19,7 @@ export default function BodyPart({ item, bodyPart, setBodyPart }) {
         justifyContent="center"
         className="bodyPart-card"
         onClick={() => {
-          setBodyPart(item);
+          setBodyPart(item.id);
           window.scrollTo({ top: 1800, left: 100, behavior: 'smooth' });
         }}
         sx={{
@@ -93,7 +93,7 @@ export default function BodyPart({ item, bodyPart, setBodyPart }) {
             transition: 'color 0.3s ease',
           }}
         >
-          {item}
+          {item.label}
         </Typography>
       </Stack>
     </motion.div>

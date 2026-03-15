@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import ExerciseDetail from './pages/ExerciseDetail';
 import Home from './pages/Home';
 import SavedPage from './pages/SavedPage';
+import LoginPage from './pages/LoginPage';
 import Footer from './components/Footer';
 import WorkoutDrawer from './components/WorkoutDrawer';
 
@@ -128,6 +129,7 @@ function App() {
           <Route path='/' element={<Home />} />
           <Route path="/exercise/:id" element={<ExerciseDetail />} />
           <Route path="/saved" element={<SavedPage />} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
         <Footer />
       </Box>

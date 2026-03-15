@@ -31,17 +31,15 @@ export default function Exercises({ exercises, setExercises, bodyPart }) {
   useEffect(() => {
     const fetchExercisesData = async () => {
       let exercisesData = [];
+      const base = 'https://exercisedb.p.rapidapi.com';
 
       if (bodyPart === 'all') {
-        exercisesData = await fetchData(
-          'https://exercisedb.p.rapidapi.com/exercises?limit=100',
-          exerciseOptions
-        );
+        exercisesData = await fetchData(`${base}/exercises?limit=100`, exerciseOptions);
+      } else if (bodyPart.startsWith('target:')) {
+        const target = bodyPart.replace('target:', '');
+        exercisesData = await fetchData(`${base}/exercises/target/${target}?limit=100`, exerciseOptions);
       } else {
-        exercisesData = await fetchData(
-          `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=100`,
-          exerciseOptions
-        );
+        exercisesData = await fetchData(`${base}/exercises/bodyPart/${bodyPart}?limit=100`, exerciseOptions);
       }
 
       if (Array.isArray(exercisesData)) {

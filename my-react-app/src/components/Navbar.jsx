@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Stack, IconButton, Tooltip, Box, Badge } from '@mui/material';
-import { LightMode, DarkMode, FitnessCenter, Bookmark } from '@mui/icons-material';
+import { Stack, IconButton, Tooltip, Box, Badge, Typography } from '@mui/material';
+import { LightMode, DarkMode, FitnessCenter, Bookmark, Logout, Login } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../assets/images/Logo.png';
 import { useWorkout } from '../utils/useWorkout';
+import { useAuth } from '../utils/useAuth';
 
 // Shared underline indicator — no layoutId, each link has its own, animates independently
 const NavUnderline = () => (
@@ -33,6 +34,12 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('home');
   const { workout } = useWorkout();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -257,6 +264,38 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
               <Bookmark sx={{ fontSize: '18px' }} />
             </IconButton>
           </Tooltip>
+
+          {/* User greeting + auth */}
+          {user ? (
+            <Stack direction="row" alignItems="center" gap="10px">
+              <Typography
+                sx={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  display: { xs: 'none', sm: 'block' },
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Hi,{' '}
+                <Box component="span" sx={{ color: 'primary.main' }}>
+                  {user.username}
+                </Box>
+              </Typography>
+              <Tooltip title="Sign out">
+                <IconButton onClick={handleLogout} size="small" sx={iconBtnSx}>
+                  <Logout sx={{ fontSize: '18px' }} />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          ) : (
+            <Tooltip title="Sign in">
+              <IconButton component={Link} to="/login" size="small" sx={iconBtnSx}>
+                <Login sx={{ fontSize: '18px' }} />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Dark/light toggle */}
           <Tooltip title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>

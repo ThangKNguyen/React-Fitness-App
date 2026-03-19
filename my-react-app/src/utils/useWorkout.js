@@ -1,36 +1,40 @@
 import { useState, useEffect } from 'react';
-
-const KEY = 'mf_workout';
-const EV = 'mf_storage';
+import { authFetch } from './api';
+import { useAuth } from './useAuth';
+import { useAuthPrompt } from './useAuthPrompt';
 
 export function useWorkout() {
-  const read = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
-    catch { return []; }
-  };
-
-  const [workout, setWorkout] = useState(read);
+  const { token } = useAuth();
+  const [workout, setWorkout] = useState([]);
 
   useEffect(() => {
-    const sync = () => setWorkout(read());
-    window.addEventListener(EV, sync);
-    return () => window.removeEventListener(EV, sync);
-  }, []);
+    if (!token) { setWorkout([]); return; }
+    authFetch('/api/user/workout')
+      .then((data) => setWorkout(Array.isArray(data) ? data : []))
+      .catch(() => setWorkout([]));
+  }, [token]);
 
-  const write = (next) => {
-    localStorage.setItem(KEY, JSON.stringify(next));
-    setWorkout(next);
-    window.dispatchEvent(new Event(EV));
+  const addToWorkout = async (exercise) => {
+    if (!token) { useAuthPrompt.getState().show(); return; }
+    if (workout.some((e) => e.id === exercise.id)) return;
+    await authFetch('/api/user/workout', {
+      method: 'POST',
+      body: JSON.stringify({ exerciseId: exercise.id }),
+    });
+    setWorkout((prev) => [...prev, exercise]);
   };
 
-  const addToWorkout = (exercise) => {
-    const cur = read();
-    if (!cur.some((e) => e.id === exercise.id)) write([...cur, exercise]);
+  const removeFromWorkout = async (id) => {
+    if (!token) return;
+    await authFetch(`/api/user/workout/${id}`, { method: 'DELETE' });
+    setWorkout((prev) => prev.filter((e) => e.id !== id));
   };
 
-  const removeFromWorkout = (id) => write(read().filter((e) => e.id !== id));
-
-  const clearWorkout = () => write([]);
+  const clearWorkout = async () => {
+    if (!token) return;
+    await authFetch('/api/user/workout', { method: 'DELETE' });
+    setWorkout([]);
+  };
 
   const isInWorkout = (id) => workout.some((e) => e.id === id);
 

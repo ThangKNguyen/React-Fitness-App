@@ -169,14 +169,51 @@ Configure `@CrossOrigin` or a global `CorsConfigurationSource` bean in Spring Se
 
 ---
 
-## Suggested Backend Implementation Order
+## Implementation Progress
 
-1. **DB + JPA setup** — connect to Postgres, verify connection
-2. **Flyway migrations** — create `users`, `favorites`, `workout_exercises`, `recently_viewed` tables
-3. **Auth** — register/login with Spring Security + JWT
-4. **Exercise proxy endpoints** — proxy RapidAPI calls with server-side caching (`ConcurrentHashMap` or Spring Cache + `@Scheduled` refresh)
-5. **User data endpoints** — favorites, workout, history (reads/writes to Postgres)
-6. **Frontend wiring** — update frontend to call backend instead of RapidAPI directly; add TanStack Query for caching + Zustand for auth state
+| Step | Description | Status |
+|------|-------------|--------|
+| 1 | **DB + JPA setup** — connect to Postgres, verify connection | ✅ Done |
+| 2 | **Flyway migrations** — create `users`, `favorites`, `workout_exercises`, `recently_viewed` tables | ✅ Done |
+| 3 | **Auth** — register/login with Spring Security + JWT; frontend login page + Zustand auth store | ✅ Done |
+| 4 | **Exercise proxy endpoints** — proxy RapidAPI calls server-side with caching | ✅ Done |
+| 5 | **User data endpoints** — favorites, workout, history (reads/writes to Postgres) | ✅ Done |
+| 6 | **Frontend wiring** — swap RapidAPI calls to backend; hooks use backend when authed | ✅ Done |
+
+### Step 3 — What was built (Auth)
+
+**Backend (`muscleforger-api`):**
+- `POST /api/auth/register` — creates user, returns `{ token, refreshToken, user }`
+- `POST /api/auth/login` — validates credentials, returns `{ token, refreshToken, user }`
+- `POST /api/auth/refresh` — issues new token pair from refresh token
+- `POST /api/auth/logout` — stateless, client discards tokens (HTTP 204)
+- `GET /api/auth/me` — returns `{ id, email, username }` (requires Bearer token)
+- JWT access token expires in 15 min, refresh token in 7 days
+- CORS configured for `http://localhost:5173`
+
+**Frontend (`my-react-app`):**
+- `src/utils/useAuth.js` — Zustand store; `login()`, `logout()`, `user`, `token`; persists to `localStorage`
+- `src/pages/LoginPage.jsx` — email + password form at `/login`; redirects to `/` on success
+- `Navbar.jsx` — shows `Hi, {username}` + logout button when authenticated; login icon when not
+- Tokens stored: `mf_token`, `mf_refresh_token`, `mf_user` in `localStorage`
+
+### Steps 4–6 — What was built (Exercise Proxy + User Data + Frontend Wiring)
+
+**Backend (`muscleforger-api`):**
+- All exercise endpoints proxying RapidAPI with `ConcurrentHashMap` cache + `@Scheduled` 6hr refresh
+- `CompletableFuture.allOf()` parallel cache warm-up on startup
+- Full user data CRUD: favorites, workout, history (capped at 20) tied to authenticated user
+
+**Frontend (`my-react-app`):**
+- `src/utils/api.js` — `apiFetch` (public) and `authFetch` (Bearer token) helpers
+- `Exercises.jsx` → calls `/api/exercises`, `/api/exercises/body-part/{bp}`, `/api/exercises/target/{t}`
+- `SearchExercises.jsx` → calls `/api/exercises/search?q={query}` (server-side filtering)
+- `ExerciseDetail.jsx` → parallel `Promise.all` for `/api/exercises/{id}`, `/api/videos`, `/api/exercises/target`, `/api/exercises/equipment`
+- `useFavorites.js` → backend when authed (`/api/user/favorites`), localStorage fallback when not
+- `useWorkout.js` → backend when authed (`/api/user/workout`), localStorage fallback when not
+- `useRecentlyViewed.js` → backend when authed (`/api/user/history`), localStorage fallback when not
+
+**Behavior when not logged in:** All exercise browsing works. Favorites/workout/history use localStorage (same as before). On login, data loads from Postgres.
 
 ---
 

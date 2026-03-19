@@ -1,30 +1,26 @@
 import { useState, useEffect } from 'react';
-
-const KEY = 'mf_recent';
-const EV = 'mf_storage';
-const MAX = 8;
+import { authFetch } from './api';
+import { useAuth } from './useAuth';
 
 export function useRecentlyViewed() {
-  const read = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
-    catch { return []; }
-  };
-
-  const [recentlyViewed, setRecentlyViewed] = useState(read);
+  const { token } = useAuth();
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
   useEffect(() => {
-    const sync = () => setRecentlyViewed(read());
-    window.addEventListener(EV, sync);
-    return () => window.removeEventListener(EV, sync);
-  }, []);
+    if (!token) { setRecentlyViewed([]); return; }
+    authFetch('/api/user/history')
+      .then((data) => setRecentlyViewed(Array.isArray(data) ? data : []))
+      .catch(() => setRecentlyViewed([]));
+  }, [token]);
 
   const addRecent = (exercise) => {
-    const cur = read();
-    const filtered = cur.filter((e) => e.id !== exercise.id);
-    const next = [exercise, ...filtered].slice(0, MAX);
-    localStorage.setItem(KEY, JSON.stringify(next));
-    setRecentlyViewed(next);
-    window.dispatchEvent(new Event(EV));
+    if (!token) return; // silently skip — no popup for automatic tracking
+    authFetch('/api/user/history', {
+      method: 'POST',
+      body: JSON.stringify({ exerciseId: exercise.id }),
+    }).catch(() => {});
+    // Optimistic update — move to front
+    setRecentlyViewed((prev) => [exercise, ...prev.filter((e) => e.id !== exercise.id)]);
   };
 
   return { recentlyViewed, addRecent };

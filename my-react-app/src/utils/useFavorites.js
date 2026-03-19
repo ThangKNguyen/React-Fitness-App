@@ -1,29 +1,33 @@
 import { useState, useEffect } from 'react';
-
-const KEY = 'mf_favorites';
-const EV = 'mf_storage';
+import { authFetch } from './api';
+import { useAuth } from './useAuth';
+import { useAuthPrompt } from './useAuthPrompt';
 
 export function useFavorites() {
-  const read = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
-    catch { return []; }
-  };
-
-  const [favorites, setFavorites] = useState(read);
+  const { token } = useAuth();
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
-    const sync = () => setFavorites(read());
-    window.addEventListener(EV, sync);
-    return () => window.removeEventListener(EV, sync);
-  }, []);
+    if (!token) { setFavorites([]); return; }
+    authFetch('/api/user/favorites')
+      .then((data) => setFavorites(Array.isArray(data) ? data : []))
+      .catch(() => setFavorites([]));
+  }, [token]);
 
-  const toggleFavorite = (exercise) => {
-    const cur = read();
-    const exists = cur.some((e) => e.id === exercise.id);
-    const next = exists ? cur.filter((e) => e.id !== exercise.id) : [exercise, ...cur];
-    localStorage.setItem(KEY, JSON.stringify(next));
-    setFavorites(next);
-    window.dispatchEvent(new Event(EV));
+  const toggleFavorite = async (exercise) => {
+    if (!token) { useAuthPrompt.getState().show(); return; }
+
+    const alreadySaved = favorites.some((e) => e.id === exercise.id);
+    if (alreadySaved) {
+      await authFetch(`/api/user/favorites/${exercise.id}`, { method: 'DELETE' });
+      setFavorites((prev) => prev.filter((e) => e.id !== exercise.id));
+    } else {
+      await authFetch('/api/user/favorites', {
+        method: 'POST',
+        body: JSON.stringify({ exerciseId: exercise.id }),
+      });
+      setFavorites((prev) => [exercise, ...prev]);
+    }
   };
 
   const isFavorite = (id) => favorites.some((e) => e.id === id);

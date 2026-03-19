@@ -7,12 +7,13 @@ import ExerciseDetail from './pages/ExerciseDetail';
 import Home from './pages/Home';
 import SavedPage from './pages/SavedPage';
 import LoginPage from './pages/LoginPage';
+import PlansPage from './pages/PlansPage';
+import TemplatePage from './pages/TemplatePage';
 import Footer from './components/Footer';
-import WorkoutDrawer from './components/WorkoutDrawer';
+import AuthPromptSnackbar from './components/AuthPromptSnackbar';
 
 function App() {
   const [mode, setMode] = useState('dark');
-  const [workoutOpen, setWorkoutOpen] = useState(false);
 
   const toggleMode = () => {
     setMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -124,16 +125,18 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ maxWidth: '1488px', width: '100%', mx: 'auto' }}>
-        <Navbar mode={mode} toggleMode={toggleMode} onOpenWorkout={() => setWorkoutOpen(true)} />
+        <Navbar mode={mode} toggleMode={toggleMode} />
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path="/exercise/:id" element={<ExerciseDetail />} />
           <Route path="/saved" element={<SavedPage />} />
+          <Route path="/plans" element={<PlansPage />} />
+          <Route path="/plans/:templateId" element={<TemplatePage />} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>
         <Footer />
       </Box>
-      <WorkoutDrawer open={workoutOpen} onClose={() => setWorkoutOpen(false)} />
+      <AuthPromptSnackbar />
     </ThemeProvider>
   );
 }

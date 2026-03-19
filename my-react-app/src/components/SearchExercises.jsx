@@ -4,7 +4,7 @@ import { Search } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import HorizontalScrollbar from './HorizontalScrollbar';
-import { exerciseOptions, fetchData } from '../utils/fetchData';
+import { apiFetch } from '../utils/api';
 
 // Custom ordered list — id is the API value (prefix 'target:' for target-based endpoints)
 const BODY_PARTS = [
@@ -29,21 +29,9 @@ export default function SearchExercises({ setExercises, bodyPart, setBodyPart })
 
   const handleSearch = async () => {
     if (search) {
-      const exercisesData = await fetchData(
-        'https://exercisedb.p.rapidapi.com/exercises?limit=900',
-        exerciseOptions
-      );
-
-      const searchedExercises = exercisesData.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search) ||
-          item.target.toLowerCase().includes(search) ||
-          item.equipment.toLowerCase().includes(search) ||
-          item.bodyPart.toLowerCase().includes(search)
-      );
-
+      const searchedExercises = await apiFetch(`/api/exercises/search?q=${encodeURIComponent(search)}`);
       setSearch('');
-      setExercises(searchedExercises);
+      if (Array.isArray(searchedExercises)) setExercises(searchedExercises);
     }
   };
 

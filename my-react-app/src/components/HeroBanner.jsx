@@ -105,8 +105,13 @@ export default function HeroBanner() {
       <motion.div {...fadeUp(0.46)}>
         <Button
           variant="contained"
-          href="#exercises"
-          component={motion.a}
+          onClick={() => {
+            const el = document.getElementById('exercises');
+            if (!el) return;
+            const y = el.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }}
+          component={motion.button}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
           sx={{

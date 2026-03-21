@@ -5,13 +5,15 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { useAuth } from '../utils/useAuth';
+import Logo from '../assets/images/trident.png';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { register } = useAuth();
 
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -22,10 +24,10 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await register(email, username, password);
       navigate('/');
-    } catch {
-      setError('Invalid email or password. Please try again.');
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,7 +109,7 @@ export default function LoginPage() {
               lineHeight: 1,
             }}
           >
-            Welcome Back
+            Create Account
           </Typography>
           <Typography
             sx={{
@@ -117,7 +119,7 @@ export default function LoginPage() {
               mb: '32px',
             }}
           >
-            Sign in to your account to continue
+            Start building your workout plans today
           </Typography>
 
           {error && (
@@ -145,7 +147,17 @@ export default function LoginPage() {
               autoComplete="email"
               sx={inputSx}
             />
-
+            <TextField
+              label="Username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              fullWidth
+              autoComplete="username"
+              inputProps={{ minLength: 3, maxLength: 50 }}
+              sx={inputSx}
+            />
             <TextField
               label="Password"
               type={showPassword ? 'text' : 'password'}
@@ -153,7 +165,10 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               fullWidth
-              autoComplete="current-password"
+              autoComplete="new-password"
+              inputProps={{ minLength: 8 }}
+              helperText="Minimum 8 characters"
+              FormHelperTextProps={{ sx: { fontFamily: '"DM Sans", sans-serif', fontSize: '12px' } }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -192,7 +207,7 @@ export default function LoginPage() {
                 '&:disabled': { opacity: 0.6 },
               }}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </Box>
         </Box>
@@ -206,10 +221,10 @@ export default function LoginPage() {
             color: 'text.secondary',
           }}
         >
-          Don&apos;t have an account?{' '}
+          Already have an account?{' '}
           <Box
             component={Link}
-            to="/register"
+            to="/login"
             sx={{
               color: 'primary.main',
               fontWeight: 700,
@@ -217,7 +232,7 @@ export default function LoginPage() {
               '&:hover': { textDecoration: 'underline' },
             }}
           >
-            Register
+            Sign In
           </Box>
         </Typography>
       </motion.div>

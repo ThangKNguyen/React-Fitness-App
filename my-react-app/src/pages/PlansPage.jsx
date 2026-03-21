@@ -148,11 +148,13 @@ export default function PlansPage() {
                 Plans
               </Box>
             </Typography>
+            {/* Full button on sm+, icon-only on mobile */}
             <Button
               variant="contained"
               startIcon={<Add />}
               onClick={() => setDialogOpen(true)}
               sx={{
+                display: { xs: 'none', sm: 'inline-flex' },
                 fontFamily: '"DM Sans", sans-serif',
                 fontWeight: 700,
                 fontSize: '14px',
@@ -163,6 +165,22 @@ export default function PlansPage() {
             >
               New Plan
             </Button>
+            <IconButton
+              onClick={() => setDialogOpen(true)}
+              sx={{
+                display: { xs: 'flex', sm: 'none' },
+                mb: '6px',
+                background: 'linear-gradient(135deg, #FF2625 0%, #FF6B35 100%)',
+                color: '#fff',
+                width: 40,
+                height: 40,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #CC1E1D 0%, #e55d2a 100%)',
+                },
+              }}
+            >
+              <Add sx={{ fontSize: '22px' }} />
+            </IconButton>
           </Stack>
           <Typography
             sx={{

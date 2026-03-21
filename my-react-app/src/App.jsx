@@ -7,6 +7,7 @@ import ExerciseDetail from './pages/ExerciseDetail';
 import Home from './pages/Home';
 import SavedPage from './pages/SavedPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import PlansPage from './pages/PlansPage';
 import TemplatePage from './pages/TemplatePage';
 import Footer from './components/Footer';
@@ -133,6 +134,7 @@ function App() {
           <Route path="/plans" element={<PlansPage />} />
           <Route path="/plans/:templateId" element={<TemplatePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
         <Footer />
       </Box>

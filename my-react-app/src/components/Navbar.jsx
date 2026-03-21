@@ -3,7 +3,7 @@ import { Stack, IconButton, Tooltip, Box, Typography, Button } from '@mui/materi
 import { LightMode, DarkMode, Logout } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
-import Logo from '../assets/images/Logo.png';
+import Logo from '../assets/images/trident.png';
 import { useAuth } from '../utils/useAuth';
 
 const NavUnderline = () => (
@@ -110,7 +110,11 @@ export default function Navbar({ mode, toggleMode }) {
             src={Logo}
             alt="Muscle Forger logo"
             whileHover={{ rotate: [0, -8, 8, 0], transition: { duration: 0.4 } }}
-            style={{ width: '38px', height: '38px', objectFit: 'contain' }}
+            style={{
+              height: '36px',
+              objectFit: 'contain',
+              filter: mode === 'dark' ? 'invert(1) brightness(0.85)' : 'none',
+            }}
           />
           <Box
             component="span"

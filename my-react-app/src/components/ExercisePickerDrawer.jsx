@@ -74,7 +74,7 @@ export default function ExercisePickerDrawer({ open, onClose, onAdd }) {
 
   const handleStartAdd = (exercise) => {
     setAddingId(exercise.id);
-    setForm({ sets: 3, reps: 10, rpe: '' });
+    setForm({ sets: 3, reps: 10, rpe: '', notes: '' });
   };
 
   const handleConfirmAdd = (exercise) => {
@@ -82,6 +82,7 @@ export default function ExercisePickerDrawer({ open, onClose, onAdd }) {
       sets: Number(form.sets) || 1,
       reps: Number(form.reps) || 1,
       rpe: form.rpe ? Number(form.rpe) : null,
+      notes: form.notes.trim() || null,
     });
     setAddingId(null);
   };
@@ -214,6 +215,15 @@ export default function ExercisePickerDrawer({ open, onClose, onAdd }) {
                   <Close sx={{ fontSize: '16px' }} />
                 </IconButton>
               </Stack>
+              <TextField
+                label="Notes"
+                value={form.notes}
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                size="small"
+                fullWidth
+                placeholder="Optional notes..."
+                sx={{ mt: '8px', ...inputSx }}
+              />
             </motion.div>
           )}
         </AnimatePresence>

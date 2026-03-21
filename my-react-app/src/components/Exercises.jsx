@@ -1,5 +1,5 @@
 import { Pagination } from '@mui/material/';
-import { Box, Stack, Typography, Select, MenuItem, ToggleButtonGroup, ToggleButton, FormControl, InputLabel } from '@mui/material';
+import { Box, Stack, Typography, Select, MenuItem, ToggleButtonGroup, ToggleButton, FormControl, InputLabel, useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { apiFetch } from '../utils/api';
@@ -14,6 +14,8 @@ const scrollToExercises = () => {
 };
 
 export default function Exercises({ exercises, setExercises, bodyPart, searched }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentPage, setCurrentPage] = useState(1);
   const [exercisesPerPage] = useState(6);
   const [sortBy, setSortBy] = useState('default');
@@ -314,7 +316,9 @@ export default function Exercises({ exercises, setExercises, bodyPart, searched 
               count={Math.ceil(processedExercises.length / exercisesPerPage)}
               page={currentPage}
               onChange={paginate}
-              size="large"
+              size={isMobile ? 'medium' : 'large'}
+              siblingCount={isMobile ? 0 : 1}
+              boundaryCount={1}
               sx={{
                 '& .MuiPaginationItem-root': {
                   fontFamily: '"DM Sans", sans-serif',

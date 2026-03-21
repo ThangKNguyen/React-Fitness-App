@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, Stack, Typography, Chip, IconButton, Tooltip, TextField, Button,
 } from '@mui/material';
-import { Delete, Edit, Close, FitnessCenter, OpenInNew } from '@mui/icons-material';
+import {
+  Delete, Edit, Close, FitnessCenter, OpenInNew,
+  KeyboardArrowUp, KeyboardArrowDown, DragIndicator,
+} from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-export default function DayExerciseRow({ exercise, index, onUpdate, onRemove }) {
+export default function DayExerciseRow({ exercise, index, totalCount, onUpdate, onRemove, onMoveUp, onMoveDown }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -15,7 +20,10 @@ export default function DayExerciseRow({ exercise, index, onUpdate, onRemove }) 
     sets: exercise.sets,
     reps: exercise.reps,
     rpe: exercise.rpe ?? '',
+    notes: exercise.notes ?? '',
   });
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: exercise.id });
 
   const detail = exercise.exerciseDetail;
   const name = detail?.name ?? 'Unknown Exercise';
@@ -27,6 +35,7 @@ export default function DayExerciseRow({ exercise, index, onUpdate, onRemove }) 
       sets: Number(form.sets) || exercise.sets,
       reps: Number(form.reps) || exercise.reps,
       rpe: form.rpe ? Number(form.rpe) : null,
+      notes: form.notes.trim() || null,
     });
     setEditing(false);
   };
@@ -40,156 +49,231 @@ export default function DayExerciseRow({ exercise, index, onUpdate, onRemove }) 
     '& .MuiInputLabel-root': { fontSize: '12px' },
   };
 
+  const arrowBtnSx = {
+    color: 'text.secondary',
+    width: '22px',
+    height: '22px',
+    '&:hover': { color: 'primary.main' },
+    '&.Mui-disabled': { opacity: 0.2 },
+  };
+
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: 16 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 16, height: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.03 }}
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+        position: 'relative',
+      }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          backgroundColor: 'background.paper',
-          borderRadius: '12px',
-          p: '10px 12px',
-          border: `1px solid ${theme.palette.divider}`,
-          transition: 'border-color 0.2s ease',
-          '&:hover': { borderColor: 'rgba(255,38,37,0.3)' },
-          mb: '8px',
-        }}
+      <motion.div
+        initial={{ opacity: 0, x: 16 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 16, height: 0 }}
+        transition={{ duration: 0.25, delay: index * 0.03 }}
       >
-        {/* Position number */}
         <Box
           sx={{
-            width: '24px',
-            height: '24px',
-            borderRadius: '6px',
-            background: 'linear-gradient(135deg, #FF2625, #FF6B35)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            backgroundColor: 'background.paper',
+            borderRadius: '12px',
+            border: `1px solid ${isDragging ? 'rgba(255,38,37,0.4)' : theme.palette.divider}`,
+            boxShadow: isDragging
+              ? (theme.palette.mode === 'dark' ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.15)')
+              : 'none',
+            transition: 'border-color 0.2s ease',
+            '&:hover': { borderColor: 'rgba(255,38,37,0.3)' },
+            mb: '8px',
+            overflow: 'hidden',
           }}
         >
-          <Typography
-            sx={{
-              fontFamily: '"DM Sans", sans-serif',
-              fontSize: '11px',
-              fontWeight: 800,
-              color: '#fff',
-              lineHeight: 1,
-            }}
-          >
-            {index + 1}
-          </Typography>
-        </Box>
+          {/* Main row */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', p: '10px 12px' }}>
 
-        {/* Thumbnail */}
-        {gifUrl ? (
-          <Box sx={{ width: '44px', height: '44px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-            <img src={gifUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255,38,37,0.06)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <FitnessCenter sx={{ fontSize: '18px', color: 'primary.main', opacity: 0.3 }} />
-          </Box>
-        )}
+            {/* Drag handle */}
+            <IconButton
+              size="small"
+              {...attributes}
+              {...listeners}
+              sx={{
+                cursor: isDragging ? 'grabbing' : 'grab',
+                color: 'text.secondary',
+                width: '22px',
+                height: '22px',
+                flexShrink: 0,
+                opacity: 0.4,
+                '&:hover': { opacity: 1, color: 'primary.main' },
+                touchAction: 'none',
+              }}
+            >
+              <DragIndicator sx={{ fontSize: '16px' }} />
+            </IconButton>
 
-        {/* Info */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            sx={{
-              fontFamily: '"DM Sans", sans-serif',
-              fontWeight: 700,
-              fontSize: '13px',
-              textTransform: 'capitalize',
-              color: 'text.primary',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {name}
-          </Typography>
-          <Stack direction="row" gap="6px" mt="3px" alignItems="center" flexWrap="wrap">
-            {bodyPart && (
-              <Chip
-                label={bodyPart}
-                size="small"
+            {/* Reorder arrows */}
+            <Stack sx={{ flexShrink: 0 }}>
+              <IconButton size="small" disabled={index === 0} onClick={onMoveUp} sx={arrowBtnSx}>
+                <KeyboardArrowUp sx={{ fontSize: '18px' }} />
+              </IconButton>
+              <IconButton size="small" disabled={index === totalCount - 1} onClick={onMoveDown} sx={arrowBtnSx}>
+                <KeyboardArrowDown sx={{ fontSize: '18px' }} />
+              </IconButton>
+            </Stack>
+
+            {/* Position number */}
+            <Box
+              sx={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '6px',
+                background: 'linear-gradient(135deg, #FF2625, #FF6B35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '11px', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                {index + 1}
+              </Typography>
+            </Box>
+
+            {/* Thumbnail */}
+            {gifUrl ? (
+              <Box sx={{ width: '44px', height: '44px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                <img src={gifUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </Box>
+            ) : (
+              <Box
                 sx={{
-                  height: '18px',
-                  fontSize: '10px',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255,38,37,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <FitnessCenter sx={{ fontSize: '18px', color: 'primary.main', opacity: 0.3 }} />
+              </Box>
+            )}
+
+            {/* Info */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                sx={{
                   fontFamily: '"DM Sans", sans-serif',
                   fontWeight: 700,
+                  fontSize: '13px',
                   textTransform: 'capitalize',
-                  backgroundColor: 'rgba(255,38,37,0.1)',
-                  color: 'primary.main',
-                  '& .MuiChip-label': { px: '6px' },
+                  color: 'text.primary',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
-              />
-            )}
-            {!editing && (
-              <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '12px', fontWeight: 600, color: 'text.secondary' }}>
-                {exercise.sets}×{exercise.reps}
-                {exercise.rpe != null && ` @ RPE ${exercise.rpe}`}
+              >
+                {name}
+              </Typography>
+              <Stack direction="row" gap="6px" mt="3px" alignItems="center" flexWrap="wrap">
+                {bodyPart && (
+                  <Chip
+                    label={bodyPart}
+                    size="small"
+                    sx={{
+                      height: '18px',
+                      fontSize: '10px',
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      backgroundColor: 'rgba(255,38,37,0.1)',
+                      color: 'primary.main',
+                      '& .MuiChip-label': { px: '6px' },
+                    }}
+                  />
+                )}
+                {!editing && (
+                  <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '12px', fontWeight: 600, color: 'text.secondary' }}>
+                    {exercise.sets}×{exercise.reps}
+                    {exercise.rpe != null && ` @ RPE ${exercise.rpe}`}
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
+
+            {/* Notes — right side on desktop, new line on mobile */}
+            {!editing && exercise.notes && (
+              <Typography
+                sx={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontSize: '12px',
+                  color: 'text.secondary',
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre-line',
+                  order: { xs: 10, lg: 0 },
+                  width: { xs: '100%', lg: 'auto' },
+                  pl: { xs: '120px', lg: 0 },
+                  flex: { lg: '0 1 220px' },
+                  textAlign: { lg: 'right' },
+                }}
+              >
+                <Box component="span" sx={{ fontWeight: 700, fontStyle: 'normal', color: 'text.secondary', opacity: 0.7 }}>Notes: </Box>
+                <Box component="span" sx={{ fontStyle: 'italic' }}>{exercise.notes}</Box>
               </Typography>
             )}
-          </Stack>
-        </Box>
 
-        {/* Actions */}
-        {!editing && (
-          <Stack direction="row" gap="2px" flexShrink={0}>
-            <Tooltip title="View exercise">
-              <IconButton size="small" onClick={() => navigate(`/exercise/${exercise.exerciseId}`)} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'primary.main' } }}>
-                <OpenInNew sx={{ fontSize: '15px' }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Edit">
-              <IconButton size="small" onClick={() => setEditing(true)} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'primary.main' } }}>
-                <Edit sx={{ fontSize: '15px' }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Remove">
-              <IconButton size="small" onClick={() => onRemove(exercise.id)} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'error.main' } }}>
-                <Delete sx={{ fontSize: '15px' }} />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        )}
-      </Box>
+            {/* Actions */}
+            {!editing && (
+              <Stack direction="row" gap="2px" flexShrink={0}>
+                <Tooltip title="View exercise">
+                  <IconButton size="small" onClick={() => navigate(`/exercise/${exercise.exerciseId}`)} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'primary.main' } }}>
+                    <OpenInNew sx={{ fontSize: '15px' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Edit">
+                  <IconButton size="small" onClick={() => { setEditing(true); setForm({ sets: exercise.sets, reps: exercise.reps, rpe: exercise.rpe ?? '', notes: exercise.notes ?? '' }); }} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'primary.main' } }}>
+                    <Edit sx={{ fontSize: '15px' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Remove">
+                  <IconButton size="small" onClick={() => onRemove(exercise.id)} sx={{ color: 'text.secondary', width: '28px', height: '28px', '&:hover': { color: 'error.main' } }}>
+                    <Delete sx={{ fontSize: '15px' }} />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            )}
+          </Box>
 
-      {/* Edit form */}
-      {editing && (
-        <Box sx={{ px: '12px', pb: '8px' }}>
-          <Stack direction="row" gap="8px" alignItems="flex-end">
-            <TextField label="Sets" type="number" value={form.sets} onChange={(e) => setForm((p) => ({ ...p, sets: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} inputProps={{ min: 1 }} />
-            <TextField label="Reps" type="number" value={form.reps} onChange={(e) => setForm((p) => ({ ...p, reps: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} inputProps={{ min: 1 }} />
-            <TextField label="RPE" type="number" value={form.rpe} onChange={(e) => setForm((p) => ({ ...p, rpe: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} placeholder="—" inputProps={{ min: 1, max: 10, step: 0.5 }} />
-            <Button variant="contained" size="small" onClick={handleSave} sx={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 700, fontSize: '12px', minWidth: '50px', borderRadius: '8px', py: '6px' }}>
-              Save
-            </Button>
-            <IconButton size="small" onClick={() => setEditing(false)} sx={{ color: 'text.secondary' }}>
-              <Close sx={{ fontSize: '16px' }} />
-            </IconButton>
-          </Stack>
+          {/* Edit form */}
+          {editing && (
+            <Box sx={{ px: '12px', pb: '10px' }}>
+              <Stack direction="row" gap="8px" alignItems="flex-end" flexWrap="wrap">
+                <TextField label="Sets" type="number" value={form.sets} onChange={(e) => setForm((p) => ({ ...p, sets: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} inputProps={{ min: 1 }} />
+                <TextField label="Reps" type="number" value={form.reps} onChange={(e) => setForm((p) => ({ ...p, reps: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} inputProps={{ min: 1 }} />
+                <TextField label="RPE" type="number" value={form.rpe} onChange={(e) => setForm((p) => ({ ...p, rpe: e.target.value }))} size="small" sx={{ width: '70px', ...inputSx }} placeholder="—" inputProps={{ min: 1, max: 10, step: 0.5 }} />
+                <Button variant="contained" size="small" onClick={handleSave} sx={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 700, fontSize: '12px', minWidth: '50px', borderRadius: '8px', py: '6px' }}>
+                  Save
+                </Button>
+                <IconButton size="small" onClick={() => setEditing(false)} sx={{ color: 'text.secondary' }}>
+                  <Close sx={{ fontSize: '16px' }} />
+                </IconButton>
+              </Stack>
+              <TextField
+                label="Notes"
+                value={form.notes}
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                size="small"
+                multiline
+                maxRows={3}
+                fullWidth
+                placeholder="Optional notes for this exercise..."
+                sx={{ mt: '8px', ...inputSx }}
+              />
+            </Box>
+          )}
         </Box>
-      )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

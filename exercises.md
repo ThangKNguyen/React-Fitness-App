@@ -287,3 +287,4 @@ Bicep Curl Variation – 3 × 12
 Tricep Exercise – 3 × 12
 
 Optional Abs – 3 sets
+

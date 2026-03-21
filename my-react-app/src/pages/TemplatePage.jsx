@@ -6,6 +6,8 @@ import {
 import { Add, ArrowBack, Edit, Check } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { authFetch } from '../utils/api';
 import DayExerciseRow from '../components/DayExerciseRow';
 import ExercisePickerDrawer from '../components/ExercisePickerDrawer';
@@ -23,6 +25,10 @@ export default function TemplatePage() {
   const [nameValue, setNameValue] = useState('');
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState('');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
 
   const fetchTemplate = async () => {
     try {
@@ -79,6 +85,7 @@ export default function TemplatePage() {
           sets: config.sets,
           reps: config.reps,
           rpe: config.rpe,
+          notes: config.notes,
         }),
       }
     );
@@ -90,6 +97,62 @@ export default function TemplatePage() {
           : d
       ),
     }));
+  };
+
+  const handleReorder = async (exerciseId1, exerciseId2) => {
+    if (!currentDay) return;
+    const updatedDay = await authFetch(
+      `/api/user/templates/${templateId}/days/${currentDay.id}/exercises/reorder`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ exerciseId1, exerciseId2 }),
+      }
+    );
+    setTemplate((prev) => ({
+      ...prev,
+      days: prev.days.map((d) =>
+        d.id === currentDay.id ? updatedDay : d
+      ),
+    }));
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !currentDay) return;
+
+    const exercises = currentDay.exercises;
+    const oldIndex = exercises.findIndex((ex) => ex.id === active.id);
+    const newIndex = exercises.findIndex((ex) => ex.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Optimistic update
+    const reordered = arrayMove(exercises, oldIndex, newIndex);
+    setTemplate((prev) => ({
+      ...prev,
+      days: prev.days.map((d) =>
+        d.id === currentDay.id ? { ...d, exercises: reordered } : d
+      ),
+    }));
+
+    // Sequential adjacent swaps to satisfy backend's swap endpoint
+    const ids = exercises.map((ex) => ex.id);
+    if (oldIndex < newIndex) {
+      for (let i = oldIndex; i < newIndex; i++) {
+        await authFetch(
+          `/api/user/templates/${templateId}/days/${currentDay.id}/exercises/reorder`,
+          { method: 'POST', body: JSON.stringify({ exerciseId1: ids[i], exerciseId2: ids[i + 1] }) }
+        );
+        [ids[i], ids[i + 1]] = [ids[i + 1], ids[i]];
+      }
+    } else {
+      for (let i = oldIndex; i > newIndex; i--) {
+        await authFetch(
+          `/api/user/templates/${templateId}/days/${currentDay.id}/exercises/reorder`,
+          { method: 'POST', body: JSON.stringify({ exerciseId1: ids[i], exerciseId2: ids[i - 1] }) }
+        );
+        [ids[i], ids[i - 1]] = [ids[i - 1], ids[i]];
+      }
+    }
   };
 
   const handleUpdateExercise = async (exerciseRowId, config) => {
@@ -342,17 +405,24 @@ export default function TemplatePage() {
                 </Typography>
               </Stack>
             ) : (
-              <AnimatePresence>
-                {currentDay.exercises.map((ex, i) => (
-                  <DayExerciseRow
-                    key={ex.id}
-                    exercise={ex}
-                    index={i}
-                    onUpdate={handleUpdateExercise}
-                    onRemove={handleRemoveExercise}
-                  />
-                ))}
-              </AnimatePresence>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={currentDay.exercises.map((ex) => ex.id)} strategy={verticalListSortingStrategy}>
+                  <AnimatePresence>
+                    {currentDay.exercises.map((ex, i) => (
+                      <DayExerciseRow
+                        key={ex.id}
+                        exercise={ex}
+                        index={i}
+                        totalCount={currentDay.exercises.length}
+                        onUpdate={handleUpdateExercise}
+                        onRemove={handleRemoveExercise}
+                        onMoveUp={() => handleReorder(ex.id, currentDay.exercises[i - 1].id)}
+                        onMoveDown={() => handleReorder(ex.id, currentDay.exercises[i + 1].id)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </SortableContext>
+              </DndContext>
             )}
           </Box>
         )}

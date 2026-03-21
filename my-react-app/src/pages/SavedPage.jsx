@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Stack, Typography, Chip, Button, IconButton } from '@mui/material';
 import { Favorite, History, FitnessCenter, Add, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFavorites } from '../utils/useFavorites';
 import { useRecentlyViewed } from '../utils/useRecentlyViewed';
 import { useCustomExercises } from '../utils/useCustomExercises';
@@ -170,11 +170,17 @@ const PaginatedCarousel = ({ items }) => {
           ...scrollbarSx,
         }}
       >
-        {slice.map((exercise, index) => (
-          <Box key={exercise.id} sx={{ flexShrink: 0 }}>
-            <ExerciseCard exercise={exercise} index={index} />
-          </Box>
-        ))}
+        <AnimatePresence initial={false}>
+          {slice.map((exercise, index) => (
+            <motion.div
+              key={exercise.id}
+              exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
+              style={{ flexShrink: 0 }}
+            >
+              <ExerciseCard exercise={exercise} index={index} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </Box>
 
       {totalPages > 1 && (

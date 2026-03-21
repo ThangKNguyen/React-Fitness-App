@@ -1,27 +1,48 @@
-import { useState, useEffect } from 'react';
+import { create } from 'zustand';
+import { useEffect } from 'react';
 import { authFetch } from './api';
 import { useAuth } from './useAuth';
 
-export function useRecentlyViewed() {
-  const { token } = useAuth();
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
+const recentlyViewedStore = create((set, get) => ({
+  recentlyViewed: [],
+  fetchedToken: null,
 
-  useEffect(() => {
-    if (!token) { setRecentlyViewed([]); return; }
-    authFetch('/api/user/history')
-      .then((data) => setRecentlyViewed(Array.isArray(data) ? data : []))
-      .catch(() => setRecentlyViewed([]));
-  }, [token]);
+  load: async (token) => {
+    if (get().fetchedToken === token) return;
+    set({ fetchedToken: token });
+    try {
+      const data = await authFetch('/api/user/history');
+      set({ recentlyViewed: Array.isArray(data) ? data : [] });
+    } catch {
+      set({ recentlyViewed: [] });
+    }
+  },
 
-  const addRecent = (exercise) => {
-    if (!token) return; // silently skip — no popup for automatic tracking
+  clear: () => set({ recentlyViewed: [], fetchedToken: null }),
+
+  addRecent: (exercise, token) => {
+    if (!token) return;
     authFetch('/api/user/history', {
       method: 'POST',
       body: JSON.stringify({ exerciseId: exercise.id }),
     }).catch(() => {});
-    // Optimistic update — move to front
-    setRecentlyViewed((prev) => [exercise, ...prev.filter((e) => e.id !== exercise.id)]);
-  };
+    set((s) => ({
+      recentlyViewed: [exercise, ...s.recentlyViewed.filter((e) => e.id !== exercise.id)],
+    }));
+  },
+}));
 
-  return { recentlyViewed, addRecent };
+export function useRecentlyViewed() {
+  const { token } = useAuth();
+  const { recentlyViewed, load, clear, addRecent } = recentlyViewedStore();
+
+  useEffect(() => {
+    if (!token) { clear(); return; }
+    load(token);
+  }, [token]);
+
+  return {
+    recentlyViewed,
+    addRecent: (exercise) => addRecent(exercise, token),
+  };
 }

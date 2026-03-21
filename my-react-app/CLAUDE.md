@@ -5,7 +5,9 @@
 
 ## Project Overview
 
-A React fitness web app that lets users search and browse exercises by body part, name, target muscle, or equipment. Each exercise has a detail page with an animated GIF, muscle info, related YouTube videos, and similar exercises.
+**Muscle Forger** — a React fitness web app that lets users search and browse exercises by body part, name, target muscle, or equipment. Each exercise has a detail page with an animated GIF, muscle info, related YouTube videos, and similar exercises. Users can favorite exercises, build a workout list, and view browsing history — all persisted in `localStorage` (to be migrated to backend).
+
+A separate Spring Boot backend is planned (separate repo, separate IntelliJ project) to proxy RapidAPI calls server-side, handle auth (JWT), and persist user data in PostgreSQL.
 
 ## Tech Stack
 
@@ -21,6 +23,13 @@ A React fitness web app that lets users search and browse exercises by body part
 | react-loader-spinner | ^6.1.6 |
 | Vite | ^5.4.21 |
 | ESLint | ^8.57.1 |
+| framer-motion | (installed) |
+
+**Planned additions (when backend is ready):**
+- TanStack Query — API caching, loading states, background refetch (replaces manual `useEffect` fetching)
+
+**Added:**
+- Zustand (`useAuth.js`) — auth state (JWT token, current user); no Redux
 
 > `react-scripts` is listed in package.json but is unused — all scripts run via Vite. Do not use CRA patterns.
 
@@ -43,12 +52,20 @@ my-react-app/
 │   │   ├── HorizontalScrollbar.jsx
 │   │   ├── Loader.jsx
 │   │   ├── Navbar.jsx
-│   │   └── SearchExercises.jsx
+│   │   ├── SearchExercises.jsx
+│   │   ├── SimilarExercises.jsx
+│   │   └── WorkoutDrawer.jsx   # Slide-out drawer for workout list
 │   ├── pages/              # Route-level components
 │   │   ├── Home.jsx
-│   │   └── ExerciseDetail.jsx
+│   │   ├── ExerciseDetail.jsx
+│   │   ├── SavedPage.jsx       # Favorites + recently viewed library
+│   │   └── LoginPage.jsx       # Login form → POST /api/auth/login
 │   ├── utils/
-│   │   └── fetchData.js    # API config + fetch helper
+│   │   ├── fetchData.js        # API config + fetch helper
+│   │   ├── useAuth.js          # Zustand auth store (login, logout, user, token)
+│   │   ├── useFavorites.js     # localStorage favorites hook
+│   │   ├── useWorkout.js       # localStorage workout list hook
+│   │   └── useRecentlyViewed.js # localStorage history hook
 │   ├── App.jsx             # Route definitions
 │   ├── App.css             # Global styles + component-specific overrides
 │   └── main.jsx            # Entry point, BrowserRouter wraps App
@@ -153,11 +170,35 @@ export default ComponentName
 
 **YouTube endpoint:** `/search?query={exerciseName} exercise` — results sliced to 3 items
 
+## localStorage Hooks
+
+All three hooks use a custom event bus (`mf_storage`) so changes in one tab sync to other components:
+
+| Hook | Key | Purpose |
+|------|-----|---------|
+| `useFavorites` | `mf_favorites` | Save/unsave exercises |
+| `useWorkout` | `mf_workout` | Add/remove/clear workout list |
+| `useRecentlyViewed` | `mf_recently_viewed` | Auto-log exercise detail visits |
+
+**All three will migrate to backend API calls when auth is ready.** `localStorage` will become a cache layer or be removed entirely.
+
+## API Call Behavior (Current)
+
+Every page load triggers fresh API calls — no caching exists on the frontend:
+- Homepage mount: `bodyPartList` + `exercises?limit=100`
+- Body part change: `exercises/bodyPart/{bodyPart}?limit=100`
+- Search: fetches full `exercises?limit=900` then filters client-side
+- Exercise detail: 4 concurrent calls (detail, YouTube videos, target exercises, equipment exercises)
+
+**Fix planned**: TanStack Query will cache responses once backend is integrated.
+
 ## Routes
 
 Defined in `App.jsx`, router in `main.jsx`:
 - `/` → `<Home />` (search + exercise grid)
 - `/exercise/:id` → `<ExerciseDetail />` (detail page)
+- `/saved` → `<SavedPage />` (favorites + recently viewed library)
+- `/login` → `<LoginPage />` (auth form)
 
 ## Rules
 
@@ -167,7 +208,9 @@ Defined in `App.jsx`, router in `main.jsx`:
 - **Match MUI v5 API** — do not use v6/v7 syntax (e.g., no `Grid2`, no new slot APIs)
 - **Responsive sx props only** — avoid inline `style={{}}` for layout; use MUI `sx`
 - **Flag ambiguity** — if a change could break the existing prop-drilling chain or API integration, flag it before proceeding
-- **API keys are currently hardcoded** in `fetchData.js` — do not log or expose them further; flag if asked to add new API calls
+- **API keys in `.env`** — `VITE_EXERCISE_DB` and `VITE_YOUTUBE_DB` in `my-react-app/.env`; do not log or expose further; will move to backend proxy
+- **No TypeScript** — frontend stays as JSX; conversion not planned
+- **No Redux** — use Zustand only for auth state when backend is integrated; prop drilling remains for exercise data
 
 ## Bug Log
 
@@ -177,5 +220,8 @@ Defined in `App.jsx`, router in `main.jsx`:
 
 - **Vite over CRA**: Project was migrated from Create React App to Vite. `react-scripts` remains in package.json but is unused. All builds go through Vite.
 - **Prop drilling over Context**: State (`bodyPart`, `exercises`) lives in `Home.jsx` and is passed down. This is intentional for simplicity — do not abstract into Context unless the tree grows significantly.
-- **Client-side API calls**: `fetchData` calls RapidAPI directly from the browser. No backend proxy exists. This is a dev/learning project — not production-ready as-is.
+- **Client-side API calls**: `fetchData` calls RapidAPI directly from the browser. No backend proxy exists. This will be replaced by a Spring Boot backend proxy.
+- **localStorage for user data**: Favorites, workout list, and recently viewed are stored in `localStorage` with a custom event bus (`mf_storage`) for cross-hook sync. Will migrate to Postgres via backend API when auth is ready.
+- **Separate backend repo**: Spring Boot backend lives in a separate git repo (opened in IntelliJ). Frontend and backend are developed independently.
+- **Backend integration plan**: Add TanStack Query for API caching + Zustand for auth state when backend is ready. No Redux.
 - **Dependencies updated (2026-03)**: All packages updated to latest within their current major version. Major version upgrades (React 19, MUI v7, React Router v7, Vite v8) deferred due to breaking changes.

@@ -1,46 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Button, Stack, TextField, Typography, InputAdornment } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import HorizontalScrollbar from './HorizontalScrollbar';
-import { exerciseOptions, fetchData } from '../utils/fetchData';
+import { apiFetch } from '../utils/api';
+
+// Custom ordered list — id is the API value (prefix 'target:' for target-based endpoints)
+const BODY_PARTS = [
+  { id: 'all',               label: 'All'         },
+  { id: 'chest',             label: 'Chest'       },
+  { id: 'back',              label: 'Back'        },
+  { id: 'target:quads',      label: 'Quads'       },
+  { id: 'target:hamstrings', label: 'Hamstrings'  },
+  { id: 'target:calves',     label: 'Calves'      },
+  { id: 'shoulders',         label: 'Shoulders'   },
+  { id: 'target:biceps',     label: 'Biceps'      },
+  { id: 'target:triceps',    label: 'Triceps'     },
+  { id: 'lower arms',        label: 'Forearms'    },
+  { id: 'target:abs',        label: 'Abs'         },
+  { id: 'cardio',            label: 'Cardio'      },
+  { id: 'neck',              label: 'Neck'        },
+];
 
 export default function SearchExercises({ setExercises, bodyPart, setBodyPart }) {
   const [search, setSearch] = useState('');
-  const [bodyParts, setBodyParts] = useState([]);
   const theme = useTheme();
-
-  useEffect(() => {
-    const fetchExercisesData = async () => {
-      const bodyPartsData = await fetchData(
-        'https://exercisedb.p.rapidapi.com/exercises/bodyPartList',
-        exerciseOptions
-      );
-      if (Array.isArray(bodyPartsData)) {
-        setBodyParts(['all', ...bodyPartsData]);
-      }
-    };
-    fetchExercisesData();
-  }, []);
 
   const handleSearch = async () => {
     if (search) {
-      const exercisesData = await fetchData(
-        'https://exercisedb.p.rapidapi.com/exercises?limit=900',
-        exerciseOptions
-      );
-
-      const searchedExercises = exercisesData.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search) ||
-          item.target.toLowerCase().includes(search) ||
-          item.equipment.toLowerCase().includes(search) ||
-          item.bodyPart.toLowerCase().includes(search)
-      );
-
+      const searchedExercises = await apiFetch(`/api/exercises/search?q=${encodeURIComponent(search)}`);
       setSearch('');
-      setExercises(searchedExercises);
+      if (Array.isArray(searchedExercises)) setExercises(searchedExercises);
     }
   };
 
@@ -173,7 +164,7 @@ export default function SearchExercises({ setExercises, bodyPart, setBodyPart })
         style={{ position: 'relative', width: '100%', padding: '20px' }}
       >
         <HorizontalScrollbar
-          data={bodyParts}
+          data={BODY_PARTS}
           bodyPart={bodyPart}
           setBodyPart={setBodyPart}
           isBodyParts

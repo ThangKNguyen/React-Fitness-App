@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Stack, IconButton, Tooltip, Box, Badge } from '@mui/material';
-import { LightMode, DarkMode, FitnessCenter, Bookmark } from '@mui/icons-material';
+import { Stack, IconButton, Tooltip, Box, Typography, Button } from '@mui/material';
+import { LightMode, DarkMode, Logout } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
-import Logo from '../assets/images/Logo.png';
-import { useWorkout } from '../utils/useWorkout';
+import Logo from '../assets/images/trident.png';
+import { useAuth } from '../utils/useAuth';
 
-// Shared underline indicator — no layoutId, each link has its own, animates independently
 const NavUnderline = () => (
   <motion.div
     initial={{ opacity: 0, scaleX: 0 }}
@@ -27,45 +25,30 @@ const NavUnderline = () => (
   />
 );
 
-export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
+export default function Navbar({ mode, toggleMode }) {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('home');
-  const { workout } = useWorkout();
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const exercisesEl = document.getElementById('exercises');
-      if (!exercisesEl) {
-        setActiveSection('home');
-        return;
-      }
-      const rect = exercisesEl.getBoundingClientRect();
-      setActiveSection(rect.top <= 120 ? 'exercises' : 'home');
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    setActiveSection('home');
-  }, [location.pathname]);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const handleHomeClick = (e) => {
     if (location.pathname === '/') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setActiveSection('home');
     } else {
       navigate('/');
       setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
     }
   };
 
-  const isHomeActive = location.pathname === '/' && activeSection === 'home';
-  const isExercisesActive = location.pathname === '/' && activeSection === 'exercises';
+  const isHomeActive = location.pathname === '/';
   const isSavedActive = location.pathname === '/saved';
+  const isPlansActive = location.pathname.startsWith('/plans');
 
   const navLinkStyle = {
     textDecoration: 'none',
@@ -77,6 +60,7 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
     paddingBottom: '4px',
     transition: 'color 0.2s ease',
     display: 'inline-block',
+    cursor: 'pointer',
   };
 
   const iconBtnSx = {
@@ -116,7 +100,7 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
           borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
-        {/* Logo + App name */}
+        {/* Logo */}
         <Link
           to="/"
           onClick={handleHomeClick}
@@ -126,7 +110,11 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
             src={Logo}
             alt="Muscle Forger logo"
             whileHover={{ rotate: [0, -8, 8, 0], transition: { duration: 0.4 } }}
-            style={{ width: '38px', height: '38px', objectFit: 'contain' }}
+            style={{
+              height: '36px',
+              objectFit: 'contain',
+              filter: mode === 'dark' ? 'invert(1) brightness(0.85)' : 'none',
+            }}
           />
           <Box
             component="span"
@@ -154,9 +142,10 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
           </Box>
         </Link>
 
-        {/* Nav links + actions */}
+        {/* Right side */}
         <Stack direction="row" alignItems="center" gap={{ xs: '14px', sm: '20px', lg: '24px' }}>
-          {/* Home */}
+
+          {/* Nav text links */}
           <Box sx={{ position: 'relative' }}>
             <Link
               to="/"
@@ -171,94 +160,39 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
             <AnimatePresence>{isHomeActive && <NavUnderline />}</AnimatePresence>
           </Box>
 
-          {/* Exercises */}
-          <Box sx={{ position: 'relative' }}>
-            <a
-              href="#exercises"
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById('exercises');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              style={{
-                ...navLinkStyle,
-                color: isExercisesActive
-                  ? theme.palette.primary.main
-                  : theme.palette.text.secondary,
-              }}
-            >
-              Exercises
-            </a>
-            <AnimatePresence>{isExercisesActive && <NavUnderline />}</AnimatePresence>
-          </Box>
-
-          {/* Saved */}
-          <Box sx={{ position: 'relative', display: { xs: 'none', sm: 'block' } }}>
-            <Link
-              to="/saved"
-              style={{
-                ...navLinkStyle,
-                color: isSavedActive
-                  ? theme.palette.primary.main
-                  : theme.palette.text.secondary,
-              }}
-            >
-              Saved
-            </Link>
-            <AnimatePresence>{isSavedActive && <NavUnderline />}</AnimatePresence>
-          </Box>
-
-          {/* Workout button */}
-          <Tooltip title={workout.length > 0 ? `Workout (${workout.length})` : 'My Workout'}>
-            <IconButton
-              onClick={onOpenWorkout}
-              size="small"
-              sx={{
-                ...iconBtnSx,
-                ...(workout.length > 0 && {
-                  color: theme.palette.primary.main,
-                  borderColor: theme.palette.primary.main,
-                  backgroundColor: 'rgba(255,38,37,0.06)',
-                }),
-              }}
-            >
-              <Badge
-                badgeContent={workout.length || null}
-                color="primary"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '10px',
-                    minWidth: '16px',
-                    height: '16px',
-                    padding: '0 3px',
-                  },
+          {/* Saved — only when logged in */}
+          {user && (
+            <Box sx={{ position: 'relative' }}>
+              <Link
+                to="/saved"
+                style={{
+                  ...navLinkStyle,
+                  color: isSavedActive ? theme.palette.primary.main : theme.palette.text.secondary,
                 }}
               >
-                <FitnessCenter sx={{ fontSize: '18px' }} />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+                Saved
+              </Link>
+              <AnimatePresence>{isSavedActive && <NavUnderline />}</AnimatePresence>
+            </Box>
+          )}
 
-          {/* Saved shortcut on mobile */}
-          <Tooltip title="Saved exercises">
-            <IconButton
-              component={Link}
-              to="/saved"
-              size="small"
-              sx={{
-                ...iconBtnSx,
-                display: { xs: 'flex', sm: 'none' },
-                ...(isSavedActive && {
-                  color: theme.palette.primary.main,
-                  borderColor: theme.palette.primary.main,
-                }),
-              }}
-            >
-              <Bookmark sx={{ fontSize: '18px' }} />
-            </IconButton>
-          </Tooltip>
+          {/* Plans — only when logged in */}
+          {user && (
+            <Box sx={{ position: 'relative' }}>
+              <Link
+                to="/plans"
+                style={{
+                  ...navLinkStyle,
+                  color: isPlansActive ? theme.palette.primary.main : theme.palette.text.secondary,
+                }}
+              >
+                Plans
+              </Link>
+              <AnimatePresence>{isPlansActive && <NavUnderline />}</AnimatePresence>
+            </Box>
+          )}
 
-          {/* Dark/light toggle */}
+          {/* Theme toggle */}
           <Tooltip title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
             <IconButton onClick={toggleMode} size="small" sx={iconBtnSx}>
               <AnimatePresence mode="wait" initial={false}>
@@ -279,6 +213,68 @@ export default function Navbar({ mode, toggleMode, onOpenWorkout }) {
               </AnimatePresence>
             </IconButton>
           </Tooltip>
+
+          {/* Divider */}
+          <Box
+            sx={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: theme.palette.divider,
+              display: { xs: 'none', sm: 'block' },
+            }}
+          />
+
+          {/* Auth section */}
+          {user ? (
+            <Stack direction="row" alignItems="center" gap="10px">
+              <Typography
+                sx={{
+                  fontFamily: '"DM Sans", sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  display: { xs: 'none', sm: 'block' },
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Hi,{' '}
+                <Box component="span" sx={{ color: 'primary.main' }}>
+                  {user.username}
+                </Box>
+              </Typography>
+              <Tooltip title="Sign out">
+                <IconButton onClick={handleLogout} size="small" sx={iconBtnSx}>
+                  <Logout sx={{ fontSize: '18px' }} />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          ) : (
+            <Button
+              component={Link}
+              to="/login"
+              variant="outlined"
+              size="small"
+              sx={{
+                fontFamily: '"DM Sans", sans-serif',
+                fontWeight: 700,
+                fontSize: '13px',
+                borderRadius: '8px',
+                borderColor: theme.palette.divider,
+                color: 'text.secondary',
+                px: '14px',
+                py: '6px',
+                whiteSpace: 'nowrap',
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  backgroundColor: 'rgba(255,38,37,0.06)',
+                },
+              }}
+            >
+              Sign In
+            </Button>
+          )}
         </Stack>
       </Stack>
     </motion.div>

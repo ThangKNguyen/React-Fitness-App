@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.18.0",
@@ -21,7 +24,8 @@
     "react-horizontal-scrolling-menu": "^2.8.2",
     "react-loader-spinner": "^6.1.6",
     "react-router-dom": "^6.30.3",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/react": "^18.3.28",

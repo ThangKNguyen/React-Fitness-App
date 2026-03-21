@@ -4,15 +4,12 @@ import { Favorite, FavoriteBorder, FitnessCenter } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { useFavorites } from '../utils/useFavorites';
-import { useWorkout } from '../utils/useWorkout';
 
 export default function ExerciseCard({ exercise, index = 0 }) {
   const theme = useTheme();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { isInWorkout, addToWorkout, removeFromWorkout } = useWorkout();
 
   const favorited = isFavorite(exercise.id);
-  const inWorkout = isInWorkout(exercise.id);
 
   return (
     <motion.div
@@ -63,35 +60,48 @@ export default function ExerciseCard({ exercise, index = 0 }) {
                 : <FavoriteBorder sx={{ fontSize: '15px' }} />}
             </IconButton>
           </Tooltip>
-
-          <Tooltip
-            title={inWorkout ? 'Remove from workout' : 'Add to workout'}
-            placement="left"
-          >
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (inWorkout) removeFromWorkout(exercise.id);
-                else addToWorkout(exercise);
-              }}
-              sx={{
-                backgroundColor: 'rgba(0,0,0,0.60)',
-                backdropFilter: 'blur(8px)',
-                color: inWorkout ? '#FF6B35' : '#fff',
-                width: '32px',
-                height: '32px',
-                transition: 'background-color 0.2s, color 0.2s',
-                '&:hover': { backgroundColor: 'rgba(0,0,0,0.80)' },
-              }}
-            >
-              <FitnessCenter sx={{ fontSize: '15px' }} />
-            </IconButton>
-          </Tooltip>
         </Box>
 
-        <img src={exercise.gifUrl} alt={exercise.name} loading="lazy" />
+        {/* Custom badge */}
+        {exercise.custom && (
+          <Chip
+            label="Custom"
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              zIndex: 2,
+              fontSize: '10px',
+              fontFamily: '"DM Sans", sans-serif',
+              fontWeight: 700,
+              height: '22px',
+              background: 'linear-gradient(135deg, #FF2625, #FF6B35)',
+              color: '#fff',
+              '& .MuiChip-label': { px: '8px' },
+            }}
+          />
+        )}
+
+        {exercise.gifUrl ? (
+          <img src={exercise.gifUrl} alt={exercise.name} loading="lazy" />
+        ) : (
+          <Box
+            sx={{
+              height: '326px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor:
+                theme.palette.mode === 'dark'
+                  ? 'rgba(255,38,37,0.08)'
+                  : 'rgba(255,38,37,0.05)',
+              flexShrink: 0,
+            }}
+          >
+            <FitnessCenter sx={{ fontSize: '64px', color: 'primary.main', opacity: 0.2 }} />
+          </Box>
+        )}
 
         <Stack direction="row" gap="8px" px="16px" mt="14px">
           <Chip

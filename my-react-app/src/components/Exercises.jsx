@@ -1,20 +1,43 @@
 import { Pagination } from '@mui/material/';
-import { Box, Stack, Typography, Select, MenuItem, ToggleButtonGroup, ToggleButton, FormControl, InputLabel } from '@mui/material';
-import { useEffect, useState, useMemo } from 'react';
+import { Box, Stack, Typography, Select, MenuItem, ToggleButtonGroup, ToggleButton, FormControl, InputLabel, useMediaQuery, useTheme } from '@mui/material';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { exerciseOptions, fetchData } from '../utils/fetchData';
+import { apiFetch } from '../utils/api';
 import ExerciseCard from './ExerciseCard';
 import Loader from './Loader';
 
-export default function Exercises({ exercises, setExercises, bodyPart }) {
+const scrollToExercises = () => {
+  const el = document.getElementById('exercises');
+  if (!el) return;
+  const y = el.getBoundingClientRect().top + window.scrollY - 80;
+  window.scrollTo({ top: y, behavior: 'smooth' });
+};
+
+export default function Exercises({ exercises, setExercises, bodyPart, searched }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentPage, setCurrentPage] = useState(1);
   const [exercisesPerPage] = useState(6);
   const [sortBy, setSortBy] = useState('default');
   const [equipmentFilter, setEquipmentFilter] = useState('all');
+  const [showNotFound, setShowNotFound] = useState(false);
+  const notFoundTimerRef = useRef(null);
+
+  // 2-second delay before showing "not found"
+  useEffect(() => {
+    clearTimeout(notFoundTimerRef.current);
+    if (searched && exercises.length === 0) {
+      setShowNotFound(false);
+      notFoundTimerRef.current = setTimeout(() => setShowNotFound(true), 2000);
+    } else {
+      setShowNotFound(false);
+    }
+    return () => clearTimeout(notFoundTimerRef.current);
+  }, [searched, exercises]);
 
   const paginate = (event, value) => {
     setCurrentPage(value);
-    window.scrollTo({ top: 1800, behavior: 'smooth' });
+    setTimeout(scrollToExercises, 50);
   };
 
   // Reset page when filter/sort/bodyPart changes
@@ -33,15 +56,12 @@ export default function Exercises({ exercises, setExercises, bodyPart }) {
       let exercisesData = [];
 
       if (bodyPart === 'all') {
-        exercisesData = await fetchData(
-          'https://exercisedb.p.rapidapi.com/exercises?limit=100',
-          exerciseOptions
-        );
+        exercisesData = await apiFetch('/api/exercises?limit=100');
+      } else if (bodyPart.startsWith('target:')) {
+        const target = bodyPart.replace('target:', '');
+        exercisesData = await apiFetch(`/api/exercises/target/${target}`);
       } else {
-        exercisesData = await fetchData(
-          `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}?limit=100`,
-          exerciseOptions
-        );
+        exercisesData = await apiFetch(`/api/exercises/body-part/${bodyPart}`);
       }
 
       if (Array.isArray(exercisesData)) {
@@ -73,7 +93,33 @@ export default function Exercises({ exercises, setExercises, bodyPart }) {
   const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
   const currentExercises = processedExercises.slice(indexOfFirstExercise, indexOfLastExercise);
 
-  if (!exercises.length) return <Loader />;
+  if (!exercises.length && !searched) return <Loader />;
+
+  if (!exercises.length && searched) return (
+    <Box id="exercises" sx={{ mt: { lg: '110px' } }} mt="50px" p="20px">
+      {!showNotFound ? (
+        <Loader />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Box
+            sx={{
+              textAlign: 'center',
+              py: '80px',
+              color: 'text.secondary',
+              fontFamily: '"DM Sans", sans-serif',
+              fontSize: '15px',
+            }}
+          >
+            No exercises found. Try a different search term.
+          </Box>
+        </motion.div>
+      )}
+    </Box>
+  );
 
   return (
     <Box id="exercises" sx={{ mt: { lg: '110px' } }} mt="50px" p="20px">
@@ -270,7 +316,9 @@ export default function Exercises({ exercises, setExercises, bodyPart }) {
               count={Math.ceil(processedExercises.length / exercisesPerPage)}
               page={currentPage}
               onChange={paginate}
-              size="large"
+              size={isMobile ? 'medium' : 'large'}
+              siblingCount={isMobile ? 0 : 1}
+              boundaryCount={1}
               sx={{
                 '& .MuiPaginationItem-root': {
                   fontFamily: '"DM Sans", sans-serif',

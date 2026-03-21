@@ -1,31 +1,48 @@
-import { useState, useEffect } from 'react';
+import { create } from 'zustand';
+import { useEffect } from 'react';
+import { authFetch } from './api';
+import { useAuth } from './useAuth';
 
-const KEY = 'mf_recent';
-const EV = 'mf_storage';
-const MAX = 8;
+const recentlyViewedStore = create((set, get) => ({
+  recentlyViewed: [],
+  fetchedToken: null,
+
+  load: async (token) => {
+    if (get().fetchedToken === token) return;
+    set({ fetchedToken: token });
+    try {
+      const data = await authFetch('/api/user/history');
+      set({ recentlyViewed: Array.isArray(data) ? data : [] });
+    } catch {
+      set({ recentlyViewed: [] });
+    }
+  },
+
+  clear: () => set({ recentlyViewed: [], fetchedToken: null }),
+
+  addRecent: (exercise, token) => {
+    if (!token) return;
+    authFetch('/api/user/history', {
+      method: 'POST',
+      body: JSON.stringify({ exerciseId: exercise.id }),
+    }).catch(() => {});
+    set((s) => ({
+      recentlyViewed: [exercise, ...s.recentlyViewed.filter((e) => e.id !== exercise.id)],
+    }));
+  },
+}));
 
 export function useRecentlyViewed() {
-  const read = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
-    catch { return []; }
-  };
-
-  const [recentlyViewed, setRecentlyViewed] = useState(read);
+  const { token } = useAuth();
+  const { recentlyViewed, load, clear, addRecent } = recentlyViewedStore();
 
   useEffect(() => {
-    const sync = () => setRecentlyViewed(read());
-    window.addEventListener(EV, sync);
-    return () => window.removeEventListener(EV, sync);
-  }, []);
+    if (!token) { clear(); return; }
+    load(token);
+  }, [token]);
 
-  const addRecent = (exercise) => {
-    const cur = read();
-    const filtered = cur.filter((e) => e.id !== exercise.id);
-    const next = [exercise, ...filtered].slice(0, MAX);
-    localStorage.setItem(KEY, JSON.stringify(next));
-    setRecentlyViewed(next);
-    window.dispatchEvent(new Event(EV));
+  return {
+    recentlyViewed,
+    addRecent: (exercise) => addRecent(exercise, token),
   };
-
-  return { recentlyViewed, addRecent };
 }

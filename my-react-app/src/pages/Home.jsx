@@ -8,6 +8,12 @@ import Exercises from '../components/Exercises';
 export default function Home() {
   const [bodyPart, setBodyPart] = useState('all');
   const [exercises, setExercises] = useState([]);
+  const [searched, setSearched] = useState(false);
+
+  const handleSetExercises = (data) => {
+    setExercises(data);
+    setSearched(true);
+  };
 
   return (
     <motion.div
@@ -19,14 +25,15 @@ export default function Home() {
       <Box>
         <HeroBanner />
         <SearchExercises
-          setExercises={setExercises}
+          setExercises={handleSetExercises}
           bodyPart={bodyPart}
-          setBodyPart={setBodyPart}
+          setBodyPart={(bp) => { setBodyPart(bp); setSearched(false); }}
         />
         <Exercises
           exercises={exercises}
           setExercises={setExercises}
           bodyPart={bodyPart}
+          searched={searched}
         />
       </Box>
     </motion.div>

@@ -14,6 +14,7 @@ dist-ssr
 
 # Claude AI
 .claude
+CLAUDE.md
 
 # Editor directories and files
 .vscode/*

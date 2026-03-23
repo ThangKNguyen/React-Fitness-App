@@ -12,6 +12,7 @@ import PlansPage from './pages/PlansPage';
 import TemplatePage from './pages/TemplatePage';
 import SettingsPage from './pages/SettingsPage';
 import ProgressPage from './pages/ProgressPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { useThemeMode } from './utils/useThemeMode';
 import Footer from './components/Footer';
 import AuthPromptSnackbar from './components/AuthPromptSnackbar';
@@ -136,6 +137,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/progress" element={<ProgressPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Footer />
       </Box>

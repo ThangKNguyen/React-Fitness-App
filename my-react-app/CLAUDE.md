@@ -225,3 +225,7 @@ Defined in `App.jsx`, router in `main.jsx`:
 - **Separate backend repo**: Spring Boot backend lives in a separate git repo (opened in IntelliJ). Frontend and backend are developed independently.
 - **Backend integration plan**: Add TanStack Query for API caching + Zustand for auth state when backend is ready. No Redux.
 - **Dependencies updated (2026-03)**: All packages updated to latest within their current major version. Major version upgrades (React 19, MUI v7, React Router v7, Vite v8) deferred due to breaking changes.
+
+## TODO LATER
+
+- **Add TanStack Query**: Currently every page does manual `useEffect` → `fetch` → `setState` with no caching. Navigating away and back re-fetches the same data. TanStack Query would cache API responses, deduplicate requests, and auto-refetch stale data. Requires refactoring all `useEffect` fetch patterns across pages/hooks. Low priority but a clean win for UX and reducing unnecessary calls to the backend.

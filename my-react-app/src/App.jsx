@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Box, createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import './App.css';
@@ -10,15 +10,14 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PlansPage from './pages/PlansPage';
 import TemplatePage from './pages/TemplatePage';
+import SettingsPage from './pages/SettingsPage';
+import ProgressPage from './pages/ProgressPage';
+import { useThemeMode } from './utils/useThemeMode';
 import Footer from './components/Footer';
 import AuthPromptSnackbar from './components/AuthPromptSnackbar';
 
 function App() {
-  const [mode, setMode] = useState('dark');
-
-  const toggleMode = () => {
-    setMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const { mode, toggleMode } = useThemeMode();
 
   const theme = useMemo(() => createTheme({
     palette: {
@@ -135,6 +134,8 @@ function App() {
           <Route path="/plans/:templateId" element={<TemplatePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/progress" element={<ProgressPage />} />
         </Routes>
         <Footer />
       </Box>

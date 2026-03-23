@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useThemeMode } from './useThemeMode';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -21,6 +22,7 @@ export const useAuth = create((set) => ({
     localStorage.setItem('mf_refresh_token', data.refreshToken);
     localStorage.setItem('mf_user', JSON.stringify(data.user));
     set({ user: data.user, token: data.token });
+    useThemeMode.getState().syncFromBackend();
   },
 
   login: async (email, password) => {
@@ -35,6 +37,7 @@ export const useAuth = create((set) => ({
     localStorage.setItem('mf_refresh_token', data.refreshToken);
     localStorage.setItem('mf_user', JSON.stringify(data.user));
     set({ user: data.user, token: data.token });
+    useThemeMode.getState().syncFromBackend();
   },
 
   logout: () => {

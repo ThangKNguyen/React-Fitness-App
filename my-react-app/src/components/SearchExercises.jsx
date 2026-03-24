@@ -19,8 +19,6 @@ const BODY_PARTS = [
   { id: 'target:triceps',    label: 'Triceps'     },
   { id: 'lower arms',        label: 'Forearms'    },
   { id: 'target:abs',        label: 'Abs'         },
-  { id: 'cardio',            label: 'Cardio'      },
-  { id: 'neck',              label: 'Neck'        },
 ];
 
 export default function SearchExercises({ setExercises, bodyPart, setBodyPart }) {

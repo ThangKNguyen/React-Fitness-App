@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Stack, Typography, Button, IconButton,
-  Menu, MenuItem, ListItemIcon, ListItemText, Divider,
+  Menu, MenuItem, ListItemIcon, ListItemText, Divider, Alert,
 } from '@mui/material';
 import { Add, FitnessCenter, Delete, Edit, MoreVert, CalendarMonth } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -25,6 +25,7 @@ export default function PlansPage() {
   const [editName, setEditName] = useState('');
   const [previewPreset, setPreviewPreset] = useState(null);
   const [importingId, setImportingId] = useState(null);
+  const [importError, setImportError] = useState('');
 
   const handleMenuOpen = (e, template) => {
     e.stopPropagation();
@@ -66,6 +67,7 @@ export default function PlansPage() {
 
   const handleImportPreset = async (preset) => {
     setImportingId(preset.id);
+    setImportError('');
     setPreviewPreset(null);
     try {
       // 1. Resolve all exercise IDs in parallel
@@ -106,6 +108,8 @@ export default function PlansPage() {
       }
 
       navigate(`/plans/${created.id}`);
+    } catch {
+      setImportError('Failed to import template. Please try again.');
     } finally {
       setImportingId(null);
     }
@@ -196,6 +200,11 @@ export default function PlansPage() {
 
         {/* Starter Templates section */}
         <Box mb={{ xs: '64px', lg: '80px' }}>
+          {importError && (
+            <Alert severity="error" onClose={() => setImportError('')} sx={{ mb: '20px', borderRadius: '10px', fontFamily: '"DM Sans", sans-serif', fontSize: '13px' }}>
+              {importError}
+            </Alert>
+          )}
           <Stack direction="row" alignItems="center" gap="12px" mb="8px">
             <Box sx={{ width: '4px', height: '28px', borderRadius: '2px', background: 'linear-gradient(180deg, #FF2625 0%, #FF6B35 100%)' }} />
             <Typography

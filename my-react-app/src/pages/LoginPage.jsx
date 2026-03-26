@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Alert, InputAdornment, IconButton } from '@mui/material';
+import { Box, Button, TextField, Typography, Alert, InputAdornment, IconButton, Tooltip } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
@@ -119,6 +119,67 @@ export default function LoginPage() {
           >
             Sign in to your account to continue
           </Typography>
+
+          {/* Demo credentials */}
+          <Box
+            sx={{
+              mb: '24px',
+              p: '14px 16px',
+              borderRadius: '10px',
+              border: '1.5px dashed',
+              borderColor: 'primary.main',
+              backgroundColor: 'rgba(255, 38, 37, 0.05)',
+            }}
+          >
+            <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '12px', fontWeight: 700, color: 'primary.main', mb: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Just browsing?
+            </Typography>
+            <Typography sx={{ fontFamily: '"DM Sans", sans-serif', fontSize: '13px', color: 'text.secondary', mb: '10px', lineHeight: 1.5 }}>
+              Use the test account to explore the app without signing up.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <Tooltip title="Click to fill email">
+                <Box
+                  onClick={() => setEmail('tester@gmail.com')}
+                  sx={{
+                    px: '10px', py: '5px',
+                    borderRadius: '6px',
+                    backgroundColor: 'background.default',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    color: 'text.primary',
+                    cursor: 'pointer',
+                    userSelect: 'all',
+                    '&:hover': { borderColor: 'primary.main' },
+                  }}
+                >
+                  tester@gmail.com
+                </Box>
+              </Tooltip>
+              <Tooltip title="Click to fill password">
+                <Box
+                  onClick={() => setPassword('12345678')}
+                  sx={{
+                    px: '10px', py: '5px',
+                    borderRadius: '6px',
+                    backgroundColor: 'background.default',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    color: 'text.primary',
+                    cursor: 'pointer',
+                    userSelect: 'all',
+                    '&:hover': { borderColor: 'primary.main' },
+                  }}
+                >
+                  12345678
+                </Box>
+              </Tooltip>
+            </Box>
+          </Box>
 
           {error && (
             <Alert

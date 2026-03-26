@@ -86,4 +86,4 @@ my-react-app/src/
 ## Deployment
 
 - **Frontend** — Netlify (auto-deploys from `main`). Set `VITE_API_URL` in Netlify environment variables.
-- **Backend** — Render. See the [backend repo](https://github.com/ThangKNguyen/muscleforger-api) for setup.
+- **Backend** — AWS (EC2/Elastic IP) and SupaBase. See the [backend repo](https://github.com/ThangKNguyen/muscleforger-api) for setup.

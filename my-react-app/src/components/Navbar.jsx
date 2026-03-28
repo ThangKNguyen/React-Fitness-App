@@ -493,31 +493,53 @@ export default function Navbar({ mode, toggleMode }) {
                     </Tooltip>
                   </Stack>
                 ) : (
-                  <Button
-                    component={Link}
-                    to="/login"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      fontFamily: '"DM Sans", sans-serif',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      borderRadius: '8px',
-                      borderColor: theme.palette.divider,
-                      color: 'text.secondary',
-                      px: '14px',
-                      py: '6px',
-                      whiteSpace: 'nowrap',
-                      textTransform: 'none',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        color: 'primary.main',
-                        backgroundColor: 'rgba(255,38,37,0.06)',
-                      },
-                    }}
-                  >
-                    Sign In
-                  </Button>
+                  <Stack direction="row" alignItems="center" gap="10px">
+                    <Tooltip title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+                      <IconButton onClick={toggleMode} size="small" sx={iconBtnSx}>
+                        <AnimatePresence mode="wait" initial={false}>
+                          <motion.div
+                            key={mode}
+                            initial={{ rotate: -90, opacity: 0 }}
+                            animate={{ rotate: 0, opacity: 1 }}
+                            exit={{ rotate: 90, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {mode === 'dark' ? (
+                              <LightMode sx={{ fontSize: '18px' }} />
+                            ) : (
+                              <DarkMode sx={{ fontSize: '18px' }} />
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
+                      </IconButton>
+                    </Tooltip>
+                    <Button
+                      component={Link}
+                      to="/login"
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        fontFamily: '"DM Sans", sans-serif',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        borderRadius: '8px',
+                        borderColor: theme.palette.divider,
+                        color: 'text.secondary',
+                        px: '14px',
+                        py: '6px',
+                        whiteSpace: 'nowrap',
+                        textTransform: 'none',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          color: 'primary.main',
+                          backgroundColor: 'rgba(255,38,37,0.06)',
+                        },
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </Stack>
                 )}
               </>
             )}
